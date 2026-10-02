@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>AviDiff — Trajectory Prediction Explorer</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
   <style>
     /* ── Reset & base ──────────────────────────────────────────────────────── */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -20,6 +22,7 @@
       --red:      #f85149;
       --orange:   #d29922;
       --sidebar:  300px;
+      --statspanel: 230px;
       --radius:   8px;
       --font: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
     }
@@ -70,6 +73,73 @@
       color: var(--muted);
       margin-bottom: 8px;
     }
+
+    /* ── Accordions (collapsible sidebar sections) ────────────────────────────── */
+    details.accordion {
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    details.accordion[open] {
+      flex: 1 1 auto;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+    /* Chrome wraps everything but <summary> in an anonymous ::details-content
+       box; without sizing it explicitly it defaults to content-based height
+       and breaks the flex-shrink chain, making the flight list uncollapsible. */
+    details.accordion[open]::details-content {
+      display: flex;
+      flex-direction: column;
+      flex: 1 1 auto;
+      min-height: 0;
+      overflow: hidden;
+      height: 100%;
+    }
+    details.accordion > summary {
+      list-style: none;
+      cursor: pointer;
+      padding: 12px 16px;
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--muted);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      user-select: none;
+      flex-shrink: 0;
+    }
+    details.accordion > summary::-webkit-details-marker { display: none; }
+    details.accordion > summary::after {
+      content: "▾";
+      font-size: 9px;
+      flex-shrink: 0;
+      transition: transform 0.15s;
+    }
+    details.accordion:not([open]) > summary::after { transform: rotate(-90deg); }
+    details.accordion > summary:hover { color: var(--text); }
+    .accordion-meta {
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: none;
+      letter-spacing: normal;
+      color: var(--accent);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      max-width: 140px;
+    }
+    .accordion-body {
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .accordion-body.padded { padding: 0 16px 12px; }
 
     /* ── Model selector ────────────────────────────────────────────────────── */
     #model-list { display: flex; flex-direction: column; gap: 4px; }
@@ -215,37 +285,59 @@
     #predict-btn:disabled { background: var(--bg3); color: var(--muted); cursor: not-allowed; }
     #predict-btn.loading { background: var(--bg3); color: var(--muted); cursor: wait; }
 
-    /* ── FDE stats ─────────────────────────────────────────────────────────── */
-    #fde-section {
-      padding: 10px 16px 12px;
+    /* ── Right-side stats panel ───────────────────────────────────────────────── */
+    #stats-panel {
+      width: var(--statspanel);
+      min-width: var(--statspanel);
+      background: var(--bg);
+      border-left: 1px solid var(--border);
+      overflow-y: auto;
       flex-shrink: 0;
+    }
+    #stats-panel-header {
+      padding: 16px 16px 4px;
+    }
+    #stats-panel-header h2 {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--accent);
+      letter-spacing: -0.2px;
+    }
+
+    /* ── FDE / ADE / KDE-NLL stats ────────────────────────────────────────── */
+    #fde-section, #ade-section, #kde-section {
+      padding: 10px 16px 12px;
       border-top: 1px solid var(--border);
     }
-    #fde-placeholder {
+    #fde-placeholder, #ade-placeholder, #kde-placeholder {
       font-size: 11px;
       color: var(--muted);
-      text-align: center;
       padding: 8px 0;
     }
-    #fde-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr 1fr;
-      gap: 6px;
+    #fde-grid, #ade-grid, #kde-grid {
       display: none;
+      flex-direction: column;
+      gap: 6px;
     }
     .fde-cell {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
       background: var(--bg3);
       border-radius: 6px;
-      padding: 8px 6px;
-      text-align: center;
+      padding: 8px 10px;
     }
-    .fde-label { font-size: 9px; text-transform: uppercase; letter-spacing: 0.6px; color: var(--muted); }
-    .fde-val   { font-size: 15px; font-weight: 700; margin-top: 3px; }
-    .fde-unit  { font-size: 9px; color: var(--muted); margin-top: 1px; }
+    .fde-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--muted); }
+    .fde-val   { font-size: 15px; font-weight: 700; }
+    .fde-unit  { font-size: 9px; color: var(--muted); margin-left: 3px; }
     #fde-min-val  { color: var(--green); }
     #fde-mean-val { color: var(--accent); }
     #fde-max-val  { color: var(--orange); }
-    #fde-meta { font-size: 10px; color: var(--muted); text-align: center; margin-top: 6px; }
+    #ade-min-val  { color: var(--green); }
+    #ade-mean-val { color: var(--accent); }
+    #ade-max-val  { color: var(--orange); }
+    #kde-mean-val { color: var(--accent); }
+    #fde-meta, #ade-meta, #kde-meta { font-size: 10px; color: var(--muted); margin-top: 8px; line-height: 1.4; }
 
     /* ── Map ────────────────────────────────────────────────────────────────── */
     #map-container {
@@ -276,6 +368,24 @@
     .legend-gt   { background: #1a9641; }
     .legend-pred { background: #d7191c; }
     .legend-text { color: var(--text); }
+
+    /* ── Heatmap toggle ────────────────────────────────────────────────────── */
+    .legend-divider { height: 1px; background: var(--border); margin: 8px 0; }
+    .legend-toggle-row { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; cursor: pointer; }
+    .switch { position: relative; display: inline-block; width: 30px; height: 16px; flex-shrink: 0; }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .switch .slider-track {
+      position: absolute; inset: 0; cursor: pointer;
+      background: var(--bg3); border: 1px solid var(--border);
+      border-radius: 16px; transition: 0.15s;
+    }
+    .switch .slider-track::before {
+      content: ""; position: absolute; height: 10px; width: 10px; left: 2px; top: 1px;
+      background: var(--muted); border-radius: 50%; transition: 0.15s;
+    }
+    .switch input:checked + .slider-track { background: rgba(88,166,255,0.25); border-color: var(--accent); }
+    .switch input:checked + .slider-track::before { transform: translateX(14px); background: var(--accent); }
+    .legend-hint { font-size: 10px; color: var(--muted); margin-bottom: 2px; line-height: 1.4; }
 
     #map-loading {
       position: absolute;
@@ -364,95 +474,92 @@
       <p>Aviation Trajectory Prediction Explorer</p>
     </div>
 
-    <!-- Model selector -->
-    <div class="section">
-      <div class="section-label">Model</div>
-      <div id="model-list">
-        <div class="model-option unavailable" id="mo-loading">
-          <span class="model-name" style="color:var(--muted);font-size:12px">Loading models…</span>
+    <!-- Model selector (collapsed by default to leave room for flights) -->
+    <details class="accordion" id="acc-model">
+      <summary>
+        <span>Model</span>
+        <span class="accordion-meta" id="model-summary-meta">DDIM</span>
+      </summary>
+      <div class="accordion-body padded">
+        <div id="model-list">
+          <div class="model-option unavailable" id="mo-loading">
+            <span class="model-name" style="color:var(--muted);font-size:12px">Loading models…</span>
+          </div>
         </div>
       </div>
-    </div>
+    </details>
 
-    <!-- Category tabs -->
-    <div id="cat-tabs">
-      <button class="cat-tab active" data-cat="consumer" id="tab-consumer">Commercial</button>
-      <button class="cat-tab"        data-cat="ga"       id="tab-ga">Gen. Aviation</button>
-    </div>
+    <!-- Flight selection (open by default — this is the primary control) -->
+    <details class="accordion" id="acc-flight" open>
+      <summary>
+        <span>Flight</span>
+        <span class="accordion-meta" id="flight-summary-meta">none selected</span>
+      </summary>
+      <div class="accordion-body">
+        <!-- Category tabs -->
+        <div id="cat-tabs">
+          <button class="cat-tab active" data-cat="consumer" id="tab-consumer">Commercial</button>
+          <button class="cat-tab"        data-cat="ga"       id="tab-ga">Gen. Aviation</button>
+        </div>
 
-    <!-- Flight panel -->
-    <div id="flight-panel">
-      <div id="flight-search-wrap">
-        <input type="text" id="flight-search" placeholder="Search callsign or ICAO…" autocomplete="off" />
+        <!-- Flight panel -->
+        <div id="flight-panel">
+          <div id="flight-search-wrap">
+            <input type="text" id="flight-search" placeholder="Search callsign or ICAO…" autocomplete="off" />
+          </div>
+          <div id="flight-count">—</div>
+          <div id="flight-list"></div>
+        </div>
       </div>
-      <div id="flight-count">—</div>
-      <div id="flight-list"></div>
-    </div>
+    </details>
 
-    <!-- Controls -->
-    <div class="section">
-      <div class="section-label">Prediction Controls</div>
+    <!-- Prediction controls (collapsed by default; predict button stays outside, always reachable) -->
+    <details class="accordion" id="acc-controls">
+      <summary>
+        <span>Prediction Controls</span>
+        <span class="accordion-meta" id="controls-summary-meta"></span>
+      </summary>
+      <div class="accordion-body padded">
+        <div class="slider-row">
+          <label>Horizon</label>
+          <input type="range" id="horizon-slider" min="1" max="500" value="43" step="1" />
+          <span class="slider-val" id="horizon-val">43</span>
+        </div>
+        <div id="horizon-label">
+          <span>1 step</span>
+          <span id="horizon-ar-note" style="color:var(--orange);font-size:10px;display:none">⟳ autoregressive beyond 43</span>
+          <span>500 steps</span>
+        </div>
 
-      <div class="slider-row">
-        <label>Horizon</label>
-        <input type="range" id="horizon-slider" min="1" max="500" value="43" step="1" />
-        <span class="slider-val" id="horizon-val">43</span>
-      </div>
-      <div id="horizon-label">
-        <span>1 step</span>
-        <span id="horizon-ar-note" style="color:var(--orange);font-size:10px;display:none">⟳ autoregressive beyond 43</span>
-        <span>500 steps</span>
-      </div>
+        <div class="slider-row">
+          <label>Obs pts</label>
+          <input type="range" id="obswin-slider" min="1" max="43" value="43" step="1" />
+          <span class="slider-val" id="obswin-val">43</span>
+        </div>
+        <div style="font-size:10px;color:var(--muted);margin-top:2px;margin-bottom:10px">
+          Context points fed to model (1–43)
+        </div>
 
-      <div class="slider-row">
-        <label>Obs pts</label>
-        <input type="range" id="obswin-slider" min="1" max="43" value="43" step="1" />
-        <span class="slider-val" id="obswin-val">43</span>
-      </div>
-      <div style="font-size:10px;color:var(--muted);margin-top:2px;margin-bottom:10px">
-        Context points fed to model (1–43)
-      </div>
+        <div class="slider-row">
+          <label>Samples</label>
+          <input type="range" id="samples-slider" min="10" max="200" value="10" step="5" />
+          <span class="slider-val" id="samples-val">10</span>
+        </div>
 
-      <div class="slider-row">
-        <label>Samples</label>
-        <input type="range" id="samples-slider" min="10" max="200" value="10" step="5" />
-        <span class="slider-val" id="samples-val">10</span>
+        <div class="slider-row" id="steps-row" style="margin-bottom:0">
+          <label>DDIM steps</label>
+          <input type="range" id="steps-slider" min="10" max="200" value="50" step="10" />
+          <span class="slider-val" id="steps-val">50</span>
+        </div>
+        <div id="steps-note" style="font-size:10px;color:var(--muted);margin-top:2px;margin-bottom:6px">
+          Fewer steps = faster, lower quality
+        </div>
       </div>
+    </details>
 
-      <div class="slider-row" id="steps-row" style="margin-bottom:0">
-        <label>DDIM steps</label>
-        <input type="range" id="steps-slider" min="10" max="200" value="50" step="10" />
-        <span class="slider-val" id="steps-val">50</span>
-      </div>
-      <div id="steps-note" style="font-size:10px;color:var(--muted);margin-top:2px;margin-bottom:6px">
-        Fewer steps = faster, lower quality
-      </div>
-
+    <!-- Predict button — always visible regardless of accordion state -->
+    <div class="section" style="border-bottom:none;flex-shrink:0">
       <button id="predict-btn" disabled>Select a flight</button>
-    </div>
-
-    <!-- FDE Stats -->
-    <div id="fde-section">
-      <div class="section-label">Final Displacement Error</div>
-      <div id="fde-placeholder">Run a prediction to see FDE stats.</div>
-      <div id="fde-grid">
-        <div class="fde-cell">
-          <div class="fde-label">Min FDE</div>
-          <div class="fde-val" id="fde-min-val">—</div>
-          <div class="fde-unit">meters</div>
-        </div>
-        <div class="fde-cell">
-          <div class="fde-label">Mean FDE</div>
-          <div class="fde-val" id="fde-mean-val">—</div>
-          <div class="fde-unit">meters</div>
-        </div>
-        <div class="fde-cell">
-          <div class="fde-label">Max FDE</div>
-          <div class="fde-val" id="fde-max-val">—</div>
-          <div class="fde-unit">meters</div>
-        </div>
-      </div>
-      <div id="fde-meta"></div>
     </div>
 
   </aside>
@@ -474,6 +581,15 @@
 
     <!-- Legend (shown after first prediction) -->
     <div id="map-legend">
+      <label class="legend-toggle-row" for="heatmap-toggle">
+        <span class="switch">
+          <input type="checkbox" id="heatmap-toggle" />
+          <span class="slider-track"></span>
+        </span>
+        <span class="legend-text">Prediction heatmap</span>
+      </label>
+      <div class="legend-hint">Sample density — see if GT (green) falls inside</div>
+      <div class="legend-divider"></div>
       <div class="legend-row">
         <div class="legend-line legend-obs"></div>
         <span class="legend-text">Observation</span>
@@ -498,11 +614,72 @@
     </div>
   </div>
 
+  <!-- ── STATS PANEL (right side) ──────────────────────────────────────────── -->
+  <aside id="stats-panel">
+    <div id="stats-panel-header">
+      <h2>Metrics</h2>
+    </div>
+
+    <!-- FDE Stats -->
+    <div id="fde-section">
+      <div class="section-label">Final Displacement Error</div>
+      <div id="fde-placeholder">Run a prediction to see FDE stats.</div>
+      <div id="fde-grid">
+        <div class="fde-cell">
+          <span class="fde-label">Min FDE</span>
+          <span><span class="fde-val" id="fde-min-val">—</span><span class="fde-unit">m</span></span>
+        </div>
+        <div class="fde-cell">
+          <span class="fde-label">Mean FDE</span>
+          <span><span class="fde-val" id="fde-mean-val">—</span><span class="fde-unit">m</span></span>
+        </div>
+        <div class="fde-cell">
+          <span class="fde-label">Max FDE</span>
+          <span><span class="fde-val" id="fde-max-val">—</span><span class="fde-unit">m</span></span>
+        </div>
+      </div>
+      <div id="fde-meta"></div>
+    </div>
+
+    <!-- ADE Stats -->
+    <div id="ade-section">
+      <div class="section-label">Average Displacement Error</div>
+      <div id="ade-placeholder">Run a prediction to see ADE stats.</div>
+      <div id="ade-grid">
+        <div class="fde-cell">
+          <span class="fde-label">Min ADE</span>
+          <span><span class="fde-val" id="ade-min-val">—</span><span class="fde-unit">m</span></span>
+        </div>
+        <div class="fde-cell">
+          <span class="fde-label">Mean ADE</span>
+          <span><span class="fde-val" id="ade-mean-val">—</span><span class="fde-unit">m</span></span>
+        </div>
+        <div class="fde-cell">
+          <span class="fde-label">Max ADE</span>
+          <span><span class="fde-val" id="ade-max-val">—</span><span class="fde-unit">m</span></span>
+        </div>
+      </div>
+      <div id="ade-meta"></div>
+    </div>
+
+    <!-- KDE-NLL Stats -->
+    <div id="kde-section">
+      <div class="section-label">KDE Negative Log-Likelihood</div>
+      <div id="kde-placeholder">Run a prediction to see KDE-NLL.</div>
+      <div id="kde-grid">
+        <div class="fde-cell">
+          <span class="fde-label">Mean KDE-NLL</span>
+          <span><span class="fde-val" id="kde-mean-val">—</span><span class="fde-unit">nats</span></span>
+        </div>
+      </div>
+      <div id="kde-meta"></div>
+    </div>
+  </aside>
+
 </div>
 
 <div id="tooltip"></div>
 
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
 // ── State ────────────────────────────────────────────────────────────────────
 const state = {
@@ -516,6 +693,7 @@ const state = {
   nSamples:       10,
   nSteps:         50,
   lastPrediction: null,
+  heatOn:         false,
 };
 
 // ── Map setup ────────────────────────────────────────────────────────────────
@@ -525,9 +703,14 @@ const map = L.map("map", {
   zoomControl: true,
 });
 
+const ESRI_ATTR = "Tiles &copy; Esri";
 L.tileLayer(
-  "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
-  { attribution: "© CartoDB", maxZoom: 18 }
+  "https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}",
+  { attribution: ESRI_ATTR, maxZoom: 16 }
+).addTo(map);
+L.tileLayer(
+  "https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}",
+  { attribution: ESRI_ATTR, maxZoom: 16, pane: "shadowPane" }
 ).addTo(map);
 
 // Layer groups for easy clearing
@@ -535,8 +718,46 @@ const obsLayer   = L.layerGroup().addTo(map);
 const gtLayer    = L.layerGroup().addTo(map);
 const predLayer  = L.layerGroup().addTo(map);
 
+// Heatmap pane — sits above the basemap but below all vector overlays
+// (obs/gt/pred lines use the default overlayPane, z-index 400) so the
+// ground-truth line always stays visible on top of the density blob.
+map.createPane("heatPane");
+map.getPane("heatPane").style.zIndex = "350";
+map.getPane("heatPane").style.pointerEvents = "none";
+let heatLayer = null;
+
+function buildHeatPoints(predictions) {
+  const MAX_POINTS = 20000;
+  let total = 0;
+  predictions.forEach(p => { total += p.length; });
+  const stride = Math.max(1, Math.ceil(total / MAX_POINTS));
+
+  const pts = [];
+  let i = 0;
+  predictions.forEach(pred => {
+    pred.forEach(pt => {
+      if (i % stride === 0) pts.push([pt[0], pt[1], 0.5]);
+      i++;
+    });
+  });
+  return pts;
+}
+
+function setHeatmapVisible(on) {
+  state.heatOn = on;
+  if (on) {
+    map.removeLayer(predLayer);
+    if (heatLayer) heatLayer.addTo(map);
+  } else {
+    if (heatLayer) map.removeLayer(heatLayer);
+    predLayer.addTo(map);
+  }
+}
+
 // ── Helpers ──────────────────────────────────────────────────────────────────
 const $ = id => document.getElementById(id);
+
+$("heatmap-toggle").addEventListener("change", e => setHeatmapVisible(e.target.checked));
 
 function fmt(n, decimals = 0) {
   if (n == null || isNaN(n)) return "—";
@@ -594,6 +815,7 @@ async function loadModels() {
         document.querySelectorAll(".model-option").forEach(el => el.classList.remove("selected"));
         div.classList.add("selected");
         div.querySelector("input").checked = true;
+        $("model-summary-meta").textContent = m.name;
         // Show DDIM-specific controls only for DDIM
         const isDDIM = m.id === "ddim";
         $("steps-row").style.display  = isDDIM ? "flex" : "none";
@@ -602,6 +824,7 @@ async function loadModels() {
     }
 
     container.appendChild(div);
+    if (m.id === state.selectedModel) $("model-summary-meta").textContent = m.name;
   });
 }
 
@@ -662,6 +885,8 @@ function selectFlight(f) {
 
   $("predict-btn").disabled     = false;
   $("predict-btn").textContent  = "Predict";
+
+  $("flight-summary-meta").textContent = f.label || f.icao24;
 
   $("map-info").style.display   = "block";
   $("map-info-title").textContent = f.label || f.icao24;
@@ -734,6 +959,8 @@ async function runPrediction() {
     state.lastPrediction = data;
     redrawPrediction(data);
     updateFDE(data.fde, data.elapsed_s, data.model_id, data.total_horizon, data.n_samples);
+    updateADE(data.ade, data.elapsed_s, data.model_id, data.total_horizon, data.n_samples);
+    updateKDE(data.kde_nll, data.elapsed_s, data.model_id, data.total_horizon, data.n_samples);
     $("map-legend").style.display = "block";
     const beyondGT = data.total_horizon > (data.gt_steps_available || 43);
     $("legend-ar").style.display  = beyondGT ? "flex" : "none";
@@ -809,6 +1036,21 @@ function redrawPrediction(data) {
     }
   });
 
+  // ── Heatmap (rebuilt every prediction; shown only if toggle is on) ───────────
+  if (heatLayer) {
+    map.removeLayer(heatLayer);
+    heatLayer = null;
+  }
+  const heatPts = buildHeatPoints(data.predictions);
+  if (heatPts.length > 0) {
+    heatLayer = L.heatLayer(heatPts, {
+      pane: "heatPane", radius: 20, blur: 16, maxZoom: 17, minOpacity: 0.15,
+    });
+    if (state.heatOn) heatLayer.addTo(map);
+  }
+  if (state.heatOn) map.removeLayer(predLayer);
+  else predLayer.addTo(map);
+
   // ── Fit map ───────────────────────────────────────────────────────────────
   const allPts = [
     ...(data.obs || []),
@@ -823,7 +1065,7 @@ function redrawPrediction(data) {
 // ── FDE display ───────────────────────────────────────────────────────────────
 function updateFDE(fde, elapsed, modelId, horizon, nSamples) {
   $("fde-placeholder").style.display = "none";
-  $("fde-grid").style.display        = "grid";
+  $("fde-grid").style.display        = "flex";
 
   $("fde-min-val").textContent  = fmt(fde.min);
   $("fde-mean-val").textContent = fmt(fde.mean);
@@ -835,6 +1077,38 @@ function updateFDE(fde, elapsed, modelId, horizon, nSamples) {
   const gtNote  = fde.has_gt === false ? " (no GT beyond 43)" : "";
   $("fde-meta").textContent =
     `${modelName} · ${nSamples} samples · FDE@step${fdeStep}${gtNote} · ${elapsed.toFixed(1)}s`;
+}
+
+// ── ADE display ───────────────────────────────────────────────────────────────
+function updateADE(ade, elapsed, modelId, horizon, nSamples) {
+  $("ade-placeholder").style.display = "none";
+  $("ade-grid").style.display        = "flex";
+
+  $("ade-min-val").textContent  = fmt(ade.min);
+  $("ade-mean-val").textContent = fmt(ade.mean);
+  $("ade-max-val").textContent  = fmt(ade.max);
+
+  const modelName = document.querySelector(`.model-option[data-id="${modelId}"] .model-name`)
+    ?.textContent?.split(" ")[0] || modelId;
+  const adeStep = ade.at_step || Math.min(state.totalHorizon, 43);
+  const gtNote  = ade.has_gt === false ? " (no GT beyond 43)" : "";
+  $("ade-meta").textContent =
+    `${modelName} · ${nSamples} samples · ADE over ${adeStep} steps${gtNote} · ${elapsed.toFixed(1)}s`;
+}
+
+// ── KDE-NLL display ────────────────────────────────────────────────────────────
+function updateKDE(kde, elapsed, modelId, horizon, nSamples) {
+  $("kde-placeholder").style.display = "none";
+  $("kde-grid").style.display        = "flex";
+
+  $("kde-mean-val").textContent = fmt(kde.mean, 2);
+
+  const modelName = document.querySelector(`.model-option[data-id="${modelId}"] .model-name`)
+    ?.textContent?.split(" ")[0] || modelId;
+  const kdeStep = kde.at_step || Math.min(state.totalHorizon, 43);
+  const gtNote  = kde.has_gt === false ? " (no GT beyond 43)" : "";
+  $("kde-meta").textContent =
+    `${modelName} · ${nSamples} samples · KDE-NLL over ${kdeStep} steps${gtNote} · ${elapsed.toFixed(1)}s`;
 }
 
 // ── Status check ──────────────────────────────────────────────────────────────

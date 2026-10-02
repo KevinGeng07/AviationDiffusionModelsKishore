@@ -27,9 +27,10 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(mess
 log = logging.getLogger(__name__)
 
 app = Flask(__name__)
+app.config["TEMPLATES_AUTO_RELOAD"] = True
 
 # ── Config ─────────────────────────────────────────────────────────────────────
-NC_PATH     = os.environ.get("NC_PATH", str(ROOT / ".." / "trajectories_adsblol_seq86_stage2.nc"))
+NC_PATH = os.environ.get("NC_PATH", str(ROOT / "trajectories_adsblol_seq86_stage2.nc"))
 MAX_FLIGHTS = int(os.environ.get("MAX_FLIGHTS", "5000"))
 DEVICE      = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -57,6 +58,12 @@ MODEL_REGISTRY = {
         "ckpt":  str(ROOT / "checkpoints_cfm_rope_ts" / "best.pt"),
         "type":  "cfm",
         "arch":  "rope_ts",
+    },
+    "cfm_kevin_dit": {
+        "name":  "CFMKevinDiT",
+        "ckpt":  str(ROOT / "checkpoints_cfm_kevin_dit" / "best_kevin_dit.pt"),
+        "type":  "cfm",
+        "arch":  "kevin_dit",
     },
 }
 
@@ -179,6 +186,9 @@ def _build_model(arch: str) -> torch.nn.Module:
     if arch == "rope_ts":
         from models.dit_RoPE_timestamps import TrajectoryDiT as RoPETSDiT
         return RoPETSDiT(d_model=256, n_heads=8, n_layers=6)
+    if arch == "kevin_dit":
+        from models.KEVIN_DiT import TrajectoryDiT as KevinDiT
+        return KevinDiT(d_model=256, n_heads=8, n_layers=6)
     raise ValueError(f"Unknown arch: {arch}")
 
 
@@ -346,6 +356,22 @@ def _extended_gt(flight_idx: int, total_steps: int) -> np.ndarray:
     return np.concatenate(gt, axis=0)[:total_steps]  # (T, 6)
 
 
+def _kde_nll(samples_xy: np.ndarray, gt_xy: np.ndarray) -> float:
+    """Negative log-likelihood of gt_xy under a Gaussian KDE fit to samples_xy (K, 2).
+
+    Isotropic bandwidth via Scott's rule for d=2. Returns nats.
+    """
+    K = samples_xy.shape[0]
+    if K < 2:
+        return float("nan")
+    std = float(samples_xy.std(axis=0).mean())
+    h = max(std * K ** (-1.0 / 6.0), 1e-3)
+    sqdist     = np.sum((gt_xy[None, :] - samples_xy) ** 2, axis=1)  # (K,)
+    log_kernel = -sqdist / (2 * h ** 2) - np.log(2 * np.pi * h ** 2)
+    log_density = np.logaddexp.reduce(log_kernel) - np.log(K)
+    return float(-log_density)
+
+
 @app.route("/api/predict", methods=["POST"])
 def api_predict():
     if _data is None:
@@ -434,11 +460,24 @@ def api_predict():
     gt_full = _extended_gt(flight_idx, total_horizon)   # (T, 6)  T <= total_horizon
     gt_steps_available = len(gt_full)                   # how many GT steps we got
 
-    # ── FDE at min(total_horizon, available GT) ────────────────────────────────
+    # ── FDE/ADE at min(total_horizon, available GT) ─────────────────────────────
     fde_horizon = min(total_horizon, gt_steps_available)
     gt_end      = gt_full[fde_horizon - 1, :2]
     pred_end    = preds_raw_full[:, fde_horizon - 1, :2]
     fde_each    = np.linalg.norm(pred_end - gt_end, axis=1)
+
+    # ADE: mean per-step displacement over the same horizon, one value per sample
+    gt_path    = gt_full[:fde_horizon, :2]                          # (H, 2)
+    pred_path  = preds_raw_full[:, :fde_horizon, :2]                # (K, H, 2)
+    step_disp  = np.linalg.norm(pred_path - gt_path[None, :, :], axis=2)  # (K, H)
+    ade_each   = step_disp.mean(axis=1)                             # (K,)
+
+    # KDE-NLL: fit a per-step Gaussian KDE over the K samples, evaluate at GT,
+    # average -log(density) over the horizon (nats; lower = better calibrated).
+    kde_nll_per_step = np.array([
+        _kde_nll(pred_path[:, s, :], gt_path[s, :]) for s in range(fde_horizon)
+    ])
+    kde_nll_mean = float(np.nanmean(kde_nll_per_step))
 
     # Display obs using only the visible window portion
     obs_display = obs_raw[43 - obs_window:] if obs_window < 43 else obs_raw
@@ -452,6 +491,19 @@ def api_predict():
             "mean":       float(fde_each.mean()),
             "max":        float(fde_each.max()),
             "per_sample": fde_each.tolist(),
+            "at_step":    fde_horizon,
+            "has_gt":     fde_horizon == total_horizon,
+        },
+        "ade": {
+            "min":        float(ade_each.min()),
+            "mean":       float(ade_each.mean()),
+            "max":        float(ade_each.max()),
+            "per_sample": ade_each.tolist(),
+            "at_step":    fde_horizon,
+            "has_gt":     fde_horizon == total_horizon,
+        },
+        "kde_nll": {
+            "mean":       kde_nll_mean,
             "at_step":    fde_horizon,
             "has_gt":     fde_horizon == total_horizon,
         },
