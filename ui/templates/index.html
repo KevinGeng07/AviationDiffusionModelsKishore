@@ -588,7 +588,7 @@
         </span>
         <span class="legend-text">Prediction heatmap</span>
       </label>
-      <div class="legend-hint">Sample density — see if GT (green) falls inside</div>
+      <div class="legend-hint">Endpoint density — see if GT end (green) falls inside</div>
       <div class="legend-divider"></div>
       <div class="legend-row">
         <div class="legend-line legend-obs"></div>
@@ -727,18 +727,13 @@ map.getPane("heatPane").style.pointerEvents = "none";
 let heatLayer = null;
 
 function buildHeatPoints(predictions) {
-  const MAX_POINTS = 20000;
-  let total = 0;
-  predictions.forEach(p => { total += p.length; });
-  const stride = Math.max(1, Math.ceil(total / MAX_POINTS));
-
+  // Only the final predicted point of each sample — density of where
+  // trajectories end up, not the paths that got them there.
   const pts = [];
-  let i = 0;
   predictions.forEach(pred => {
-    pred.forEach(pt => {
-      if (i % stride === 0) pts.push([pt[0], pt[1], 0.5]);
-      i++;
-    });
+    if (!pred || pred.length === 0) return;
+    const end = pred[pred.length - 1];
+    pts.push([end[0], end[1], 0.5]);
   });
   return pts;
 }
@@ -1044,7 +1039,7 @@ function redrawPrediction(data) {
   const heatPts = buildHeatPoints(data.predictions);
   if (heatPts.length > 0) {
     heatLayer = L.heatLayer(heatPts, {
-      pane: "heatPane", radius: 20, blur: 16, maxZoom: 17, minOpacity: 0.15,
+      pane: "heatPane", radius: 32, blur: 26, maxZoom: 17, minOpacity: 0.2,
     });
     if (state.heatOn) heatLayer.addTo(map);
   }
