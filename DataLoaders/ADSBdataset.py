@@ -21,7 +21,9 @@ def load_netcdf(filepath):
 
 
 def split_by_icao(icao24, train_frac=0.85, val_frac=0.10):
-    unique_icao = list(set(icao24))
+    # sorted: set order depends on per-process string hashing, which would make
+    # the seeded shuffle (and therefore the split) differ between runs/resumes
+    unique_icao = sorted(set(icao24))
     np.random.shuffle(unique_icao)
     n       = len(unique_icao)
     n_train = int(n * train_frac)
