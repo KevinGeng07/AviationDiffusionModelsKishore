@@ -212,3 +212,6 @@ if __name__ == "__main__":
 
     out = model(x_obs, x_t, t, t_rel)
     print(out.shape)   # should be torch.Size([4, 43, 6])
+
+    from torchinfo import summary
+    summary(model, input_data=(x_obs, x_t, t, t_rel))

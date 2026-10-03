@@ -162,7 +162,7 @@ def write_netcdf(output_path, traj, origin, icao_list, callsign_list, times, sta
         tv = ds.createVariable("trajectory", "f4", ("sample", "sequence", "feature"),
                                 zlib=True, complevel=4)
         tv[:] = traj
-        tv.feature_names = "dx,dy,z,vx,vy,vz"
+        tv.feature_names = "x,y,z,vx,vy,vz"
 
         ds.createVariable("origin", "f4", ("sample", "xy"))[:] = origin
 
@@ -171,7 +171,7 @@ def write_netcdf(output_path, traj, origin, icao_list, callsign_list, times, sta
 
         ds.seq_len = seq_len
         ds.offset  = offset
-        ds.description = f"ADS-B trajectory sequences ({seq_len} timesteps, Cartesian+delta) — Bay Area"
+        ds.description = f"ADS-B trajectory sequences ({seq_len} timesteps, Cartesian, absolute) — Bay Area"
     finally:
         ds.close()
 
@@ -208,12 +208,17 @@ def build(file_paths, seq_len, offset, output_path):
         return
 
     data  = np.array(all_seq)   # (N, seq_len, 6) absolute x,y,z,vx,vy,vz
+    all_seq.clear()             # free per-window arrays before building the rest
     times = np.array(all_ts)    # (N, seq_len)
+    all_ts.clear()
 
     traj, origin = to_delta_xy(data)               # traj is now dx,dy,z,vx,vy,vz
     stats = compute_stats(data, traj, times)        # pass both raw and delta
+    del traj
 
-    write_netcdf(output_path, traj, origin, all_icao, all_cs, times, stats, seq_len, offset)
+    # CHANGED: store absolute x,y,z,vx,vy,vz — ADSBdataset normalizes `trajectory`
+    # with feature_mean/std (computed on absolute data) and the UI plots it directly
+    write_netcdf(output_path, data, origin, all_icao, all_cs, times, stats, seq_len, offset)
     print(f"\nSaved {data.shape[0]:,} samples -> {output_path}")
 
 

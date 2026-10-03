@@ -2,6 +2,8 @@ __pycache__/
 *.py[cod]
 *.pyo
 .venv/
+# Data: raw ADS-B CSVs and built NetCDF datasets
+Data/adsb/
 *.nc
 *.csv
 checkpoints/

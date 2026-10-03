@@ -122,7 +122,7 @@ class TrajectoryDiT(nn.Module):
                  in_dim   = 6,
                  d_model  = 256,
                  n_heads  = 8,
-                 n_layers = 4,
+                 n_layers = 6,
                  dropout  = 0.1):
         super().__init__()
 
