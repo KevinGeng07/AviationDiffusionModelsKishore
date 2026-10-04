@@ -1,0 +1,18 @@
+Python: /global/home/users/kevingeng/.conda/envs/adsb/bin/python
+torch 2.14.1+cu130 | netCDF4 1.7.4
+CUDA available: True
+Device: NVIDIA GeForce RTX 2080 Ti
+Training on cuda — CFM + SWI_DiT distillation (swi_dit_6L_teacher → swi_dit_5L_student, alpha=0.5, seed=42)
+Batches per epoch: 17,899 train, 1,996 val (batch_size=64, num_workers=2)
+Teacher: /global/scratch/users/kevingeng/aviation-bayen/AviationDiffusionModelsKishore/training/checkpoints/swi_dit/best_swi_dit.pt (epoch=84, ckpt val_fde=824.5062353116024) | {'obs_len': 43, 'fut_len': 43, 'in_dim': 6, 'd_model': 256, 'n_heads': 8, 'n_layers': 6, 'dropout': 0.1} | 7,249,158 params
+Student: {'obs_len': 43, 'fut_len': 43, 'in_dim': 6, 'd_model': 256, 'n_heads': 8, 'n_layers': 5, 'dropout': 0.1} | 6,132,998 params
+Teacher val minFDE (this split): 852.5m
+  epoch 001 | batch 500/17,899 (2.8%) | loss 1.0713 (gt 1.1138, kd 1.0287) | 24.1 it/s | elapsed 0.3 min | epoch ETA 12.0 min
+  epoch 001 | batch 1,000/17,899 (5.6%) | loss 0.6625 (gt 0.7050, kd 0.6199) | 24.2 it/s | elapsed 0.7 min | epoch ETA 11.6 min
+  epoch 001 | batch 1,500/17,899 (8.4%) | loss 0.5053 (gt 0.5477, kd 0.4629) | 24.2 it/s | elapsed 1.0 min | epoch ETA 11.3 min
+  epoch 001 | batch 2,000/17,899 (11.2%) | loss 0.4213 (gt 0.4638, kd 0.3788) | 24.2 it/s | elapsed 1.4 min | epoch ETA 10.9 min
+  epoch 001 | batch 2,500/17,899 (14.0%) | loss 0.3676 (gt 0.4101, kd 0.3251) | 24.2 it/s | elapsed 1.7 min | epoch ETA 10.6 min
+  epoch 001 | batch 3,000/17,899 (16.8%) | loss 0.3293 (gt 0.3717, kd 0.2869) | 24.2 it/s | elapsed 2.1 min | epoch ETA 10.3 min
+  epoch 001 | batch 3,500/17,899 (19.6%) | loss 0.3010 (gt 0.3434, kd 0.2586) | 24.2 it/s | elapsed 2.4 min | epoch ETA 9.9 min
+  epoch 001 | batch 4,000/17,899 (22.3%) | loss 0.2790 (gt 0.3214, kd 0.2367) | 24.2 it/s | elapsed 2.8 min | epoch ETA 9.6 min
+  epoch 001 | batch 4,500/17,899 (25.1%) | loss 0.2615 (gt 0.3039, kd 0.2191) | 24.2 it/s | elapsed 3.1 min | epoch ETA 9.2 min
