@@ -70,7 +70,7 @@ class TrajectoryDataset(Dataset):
         }
 
 
-def get_dataloaders(filepath, batch_size=64, obs_len=43, seed=42, subset=None):
+def get_dataloaders(filepath, batch_size=64, obs_len=43, seed=42, subset=None, num_workers=4):
     np.random.seed(seed)
 
     # BUG FIX: was calling load_netcdf twice — removed duplicate call
@@ -89,10 +89,10 @@ def get_dataloaders(filepath, batch_size=64, obs_len=43, seed=42, subset=None):
 
     # ADDED: num_workers=4 and pin_memory=True for faster data loading
     train_loader = DataLoader(train_ds, batch_size=batch_size, shuffle=True,
-                              num_workers=4, pin_memory=True)
+                              num_workers=num_workers, pin_memory=True)
     val_loader   = DataLoader(val_ds,   batch_size=batch_size, shuffle=False,
-                              num_workers=4, pin_memory=True)
+                              num_workers=num_workers, pin_memory=True)
     test_loader  = DataLoader(test_ds,  batch_size=batch_size, shuffle=False,
-                              num_workers=4, pin_memory=True)
+                              num_workers=num_workers, pin_memory=True)
 
     return train_loader, val_loader, test_loader

@@ -45,6 +45,7 @@ comparable across epochs.
 import argparse
 import csv
 import json
+import os
 import random
 import time
 import torch
@@ -284,6 +285,8 @@ def train(
     seed           = 42,
     kl_samples     = 20,
     kl_batches     = 5,
+    log_every      = 500,
+    num_workers    = None,
     device         = "cuda",
     subset         = None,
 ):
@@ -308,9 +311,14 @@ def train(
           f"alpha={alpha}, seed={seed})")
 
     # seed controls the aircraft-level train/val/test split
+    # default: one DataLoader worker per CPU Slurm gave the job (falls back to 4 off-cluster)
+    if num_workers is None:
+        num_workers = int(os.environ.get("SLURM_CPUS_PER_TASK", 4))
     train_loader, val_loader, test_loader = get_dataloaders(
-        nc_path, batch_size=batch_size, seed=seed, subset=subset,
+        nc_path, batch_size=batch_size, seed=seed, subset=subset, num_workers=num_workers,
     )
+    print(f"Batches per epoch: {len(train_loader):,} train, {len(val_loader):,} val "
+          f"(batch_size={batch_size}, num_workers={num_workers})", flush=True)
 
     import netCDF4 as nc
     ds       = nc.Dataset(nc_path, "r")
@@ -402,6 +410,18 @@ def train(
             n_batches   += 1
             global_step += 1
 
+            # ── Within-epoch progress line ────────────────────────────────
+            if log_every and n_batches % log_every == 0:
+                elapsed = time.time() - epoch_start
+                rate    = n_batches / elapsed
+                eta     = (len(train_loader) - n_batches) / rate
+                print(f"  epoch {epoch+1:03d} | batch {n_batches:,}/{len(train_loader):,} "
+                      f"({100 * n_batches / len(train_loader):.1f}%) | "
+                      f"loss {total_loss / n_batches:.4f} (gt {total_gt / n_batches:.4f}, "
+                      f"kd {total_kd / n_batches:.4f}) | {rate:.1f} it/s | "
+                      f"elapsed {elapsed / 60:.1f} min | epoch ETA {eta / 60:.1f} min",
+                      flush=True)
+
         scheduler.step()
 
         # ── Per-epoch student metrics (EMA weights) ───────────────────────
@@ -490,6 +510,10 @@ if __name__ == "__main__":
                          help="Seeds the train/val/test split and all RNGs")
     parser.add_argument("--kl_samples", type=int, default=20,
                          help="Samples per window per model for the KL metric")
+    parser.add_argument("--log_every", type=int, default=500,
+                         help="Print a progress line every N training batches (0 = off)")
+    parser.add_argument("--num_workers", type=int, default=None,
+                         help="DataLoader workers; default = $SLURM_CPUS_PER_TASK, or 4")
     parser.add_argument("--kl_batches", type=int, default=5,
                          help="Validation batches used for the KL metric")
     parser.add_argument("--subset", type=int, default=None,
@@ -508,5 +532,7 @@ if __name__ == "__main__":
         seed           = args.seed,
         kl_samples     = args.kl_samples,
         kl_batches     = args.kl_batches,
+        log_every      = args.log_every,
+        num_workers    = args.num_workers,
         subset         = args.subset,
     )
