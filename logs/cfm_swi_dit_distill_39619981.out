@@ -1,8 +1,0 @@
-Python: /global/home/users/kevingeng/.conda/envs/adsb/bin/python
-torch 2.14.1+cu130 | netCDF4 1.7.4
-CUDA available: True
-Device: NVIDIA GeForce RTX 2080 Ti
-Training on cuda — CFM + SWI_DiT distillation (swi_dit_6L_teacher → swi_dit_5L_student, alpha=0.5, seed=42)
-Teacher: /global/scratch/users/kevingeng/aviation-bayen/AviationDiffusionModelsKishore/training/checkpoints/swi_dit/best_swi_dit.pt (epoch=84, ckpt val_fde=824.5062353116024) | {'obs_len': 43, 'fut_len': 43, 'in_dim': 6, 'd_model': 256, 'n_heads': 8, 'n_layers': 6, 'dropout': 0.1} | 7,249,158 params
-Student: {'obs_len': 43, 'fut_len': 43, 'in_dim': 6, 'd_model': 256, 'n_heads': 8, 'n_layers': 5, 'dropout': 0.1} | 6,132,998 params
-Teacher val minFDE (this split): 852.5m

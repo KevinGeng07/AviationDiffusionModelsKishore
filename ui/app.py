@@ -61,7 +61,7 @@ MODEL_REGISTRY = {
     },
     "cfm_swi_dit": {
         "name":  "CFMSwiDiT",
-        "ckpt":  str(ROOT / "training" / "checkpoints" / "swi_dit" / "best_swi_dit.pt"),
+        "ckpt":  str(ROOT / "checkpoints" / "swi_dit" / "best_swi_dit.pt"),
         "type":  "cfm",
         "arch":  "swi_dit",
     },

@@ -63,7 +63,7 @@ with learned positions, two **RoPE** variants, and **SWI_DiT** (SwiGLU feed-forw
 │
 ├── configs/
 │   ├── swi_dit_teacher.json                # teacher architecture + checkpoint path
-│   └── swi_dit_student.json                # student architecture (5 layers)
+│   └── swi_dit_student.json                # student architecture (4 layers)
 │
 └── ui/
     ├── app.py                      # Flask "Prediction Explorer" backend
@@ -314,7 +314,7 @@ A gated linear unit lets the network learn multiplicative feature interactions; 
 3× instead of 4× width keeps the parameter count similar to the GELU MLP (3 matrices
 instead of 2). It also defines an extra top-level `self.adaLN` that is never used in
 `forward` (≈0.26 M dead parameters — kept because the checkpoint contains it). The
-included checkpoint `training/checkpoints/swi_dit/` is a **6-layer, CFM-trained** SWI_DiT
+included checkpoint `checkpoints/swi_dit/` is a **6-layer, CFM-trained** SWI_DiT
 (epoch 84, val minFDE 824.5 m), trained with `training/train_cfm_swi_dit*.py`.
 
 Shape-check any model with `venv/bin/python models/dit.py` (needs `torchinfo`) or
@@ -479,9 +479,9 @@ run locally for quick tests — just slowly on CPU.
 | script | batch file | what it does | output (on Savio) |
 |---|---|---|---|
 | `train_cfm_swi_dit_savio.py` | `CFMSwiDITSavio7MParameterModel.sh` | trains a SWI_DiT from scratch with CFM | `$REPO/training/checkpoints/swi_dit/` |
-| `train_cfm_swi_dit_distill_savio.py` | `CFMSwiDITDistillSavio.sh` | distills the trained 6-layer SWI_DiT into a 5-layer student | `$REPO/training/checkpoints/swi_dit_distill/` |
+| `train_cfm_swi_dit_distill_savio.py` | `CFMSwiDITDistillSavio.sh` | distills the trained 6-layer SWI_DiT into a 4-layer student | `$REPO/training/checkpoints/swi_dit_distill_4L/` |
 
-The 6-layer teacher is **already trained** (`training/checkpoints/swi_dit/best_swi_dit.pt`,
+The 6-layer teacher is **already trained** (`checkpoints/swi_dit/best_swi_dit.pt` locally,
 epoch 84, val minFDE 824.5 m), so the normal workflow only runs the distillation job.
 
 ### 9.1 Common setup
@@ -502,7 +502,7 @@ epoch 84, val minFDE 824.5 m), so the normal workflow only runs the distillation
 The **teacher** (6-layer SWI_DiT) is loaded from its checkpoint and only ever run in
 inference: `eval()` mode (no dropout), `requires_grad_(False)`, never given to the
 optimizer. On every training batch it predicts a velocity for the same noisy input the
-student sees, and the **student** (5-layer SWI_DiT) learns from both the data and the teacher:
+student sees, and the **student** (4-layer SWI_DiT) learns from both the data and the teacher:
 
 ```
 x_t   = (1 - t)·noise + t·fut              t ~ logit-normal, shared by both models
@@ -521,8 +521,8 @@ Both terms use the standard CFM weighting (last ¼ of the horizon ×2).
 
 ```json
 // configs/swi_dit_teacher.json                    // configs/swi_dit_student.json
-{ "name": "swi_dit_6L_teacher",                    { "name": "swi_dit_5L_student",
-  "checkpoint": "training/checkpoints/swi_dit/       "model": { ..., "n_layers": 5 } }
+{ "name": "swi_dit_6L_teacher",                    { "name": "swi_dit_4L_student",
+  "checkpoint": "checkpoints/swi_dit/                "model": { ..., "n_layers": 4 } }
                  best_swi_dit.pt",
   "model": { "d_model": 256, "n_heads": 8,
              "n_layers": 6, "dropout": 0.1, ... } }
@@ -560,7 +560,7 @@ or without a resume. Resume also restores the LR scheduler and step counter.
    scp Data/trajectories_adsblol_seq86_stage2.nc \
        <you>@dtn.brc.berkeley.edu:/global/scratch/users/kevingeng/aviation-bayen/data/
    ssh <you>@dtn.brc.berkeley.edu "mkdir -p /global/scratch/users/kevingeng/aviation-bayen/AviationDiffusionModelsKishore/training/checkpoints/swi_dit"
-   scp training/checkpoints/swi_dit/best_swi_dit.pt \
+   scp checkpoints/swi_dit/best_swi_dit.pt \
        <you>@dtn.brc.berkeley.edu:/global/scratch/users/kevingeng/aviation-bayen/AviationDiffusionModelsKishore/training/checkpoints/swi_dit/
    ```
 3. **Python env:** a conda env named `adsb` with `torch`, `numpy`, `netCDF4`
@@ -572,7 +572,7 @@ or without a resume. Resume also restores the LR scheduler and step counter.
    squeue -u $USER                                           # check the queue
    ```
 5. **Monitor:** `tail -f logs/cfm_swi_dit_distill_<jobid>.out` (stdout is unbuffered) and
-   `$REPO/training/checkpoints/swi_dit_distill/metrics.csv`.
+   `$REPO/training/checkpoints/swi_dit_distill_4L/metrics.csv`.
 
 Each job requests 1× GTX 2080 Ti for 20 h on `savio3_gpu` under account `ac_mixedav`; edit
 the `#SBATCH` lines if your allocation differs. Resubmitting the same job resumes from
@@ -604,7 +604,7 @@ subsetting, and DataLoader workers are slow to start on macOS.
 - The best validation score is stored in each checkpoint:
 
 ```bash
-venv/bin/python -c "import torch; c=torch.load('training/checkpoints/swi_dit/best_swi_dit.pt', map_location='cpu', weights_only=False); print(c['epoch'], c['val_fde'])"
+venv/bin/python -c "import torch; c=torch.load('checkpoints/swi_dit/best_swi_dit.pt', map_location='cpu', weights_only=False); print(c['epoch'], c['val_fde'])"
 ```
 
 - **ADE (average displacement error)** — mean `(x, y)` distance over every future step,
@@ -645,7 +645,7 @@ only if its checkpoint file exists:
 | `cfm` | `checkpoints_cfm/last.pt` | CFM | `dit.py` |
 | `cfm_rope_og` | `checkpoints_cfm_rope_og/best.pt` | CFM | RoPE-A |
 | `cfm_rope_ts` | `checkpoints_cfm_rope_ts/best.pt` | CFM | RoPE-B |
-| `cfm_swi_dit` | `training/checkpoints/swi_dit/best_swi_dit.pt` | CFM | SWI_DiT (6 layers), shown as "CFMSwiDiT" |
+| `cfm_swi_dit` | `checkpoints/swi_dit/best_swi_dit.pt` | CFM | SWI_DiT (6 layers), shown as "CFMSwiDiT" |
 
 To add a model: add a branch in `_build_model(arch)` that constructs it with the right
 `n_layers`, and a registry entry with `ckpt`, `type` (`"ddim"`/`"cfm"`) and `arch`.

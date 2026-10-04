@@ -1,6 +1,6 @@
 #!/bin/bash
 # ---------------------------------------------------------------------------
-# SLURM job script: CFM + SWI_DiT knowledge distillation (6 → 5 layers), ADS-B trajectory
+# SLURM job script: CFM + SWI_DiT knowledge distillation (6 → 4 layers), ADS-B trajectory
 # ---------------------------------------------------------------------------
 #SBATCH --job-name=cfm_swi_dit_distill
 #SBATCH --account=ac_mixedav
@@ -37,7 +37,8 @@ $PYTHON -c "import torch, numpy, netCDF4; print('torch', torch.__version__, '| n
 NC_PATH=/global/scratch/users/kevingeng/aviation-bayen/data/trajectories_adsblol_seq86_stage2.nc
 REPO=/global/scratch/users/kevingeng/aviation-bayen/AviationDiffusionModelsKishore
 TEACHER_CKPT=$REPO/training/checkpoints/swi_dit/best_swi_dit.pt
-OUTPUT_DIR=$REPO/training/checkpoints/swi_dit_distill
+# separate folder per student size: resuming a 4-layer run from a 5-layer last.pt would fail
+OUTPUT_DIR=$REPO/training/checkpoints/swi_dit_distill_4L
 
 mkdir -p $OUTPUT_DIR
 

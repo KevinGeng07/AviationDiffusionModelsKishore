@@ -1,5 +1,0 @@
-/global/home/users/kevingeng/.conda/envs/adsb/lib/python3.11/site-packages/torch/utils/data/dataloader.py:431: UserWarning: This DataLoader will create 4 worker processes in total. Our suggested max number of worker in current system is 2, which is smaller than what this DataLoader is going to create. Please be aware that excessive worker creation might get DataLoader running slow or even freeze, lower the worker number to avoid potential slowness/freeze if necessary.
-  self.check_worker_number_rationality()
-/global/home/users/kevingeng/.conda/envs/adsb/lib/python3.11/site-packages/torch/utils/data/dataloader.py:437: UserWarning: This DataLoader will create 4 worker processes in total. Our suggested max number of worker in current system is 2, which is smaller than what this DataLoader is going to create. Please be aware that excessive worker creation might get DataLoader running slow or even freeze, lower the worker number to avoid potential slowness/freeze if necessary.
-  self.check_worker_number_rationality()
-[2026-10-04T04:02:19.759] error: *** JOB 39619981 ON n0159.savio3 CANCELLED AT 2026-10-04T04:02:19 DUE to SIGNAL Terminated ***

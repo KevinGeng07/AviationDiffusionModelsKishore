@@ -1,6 +1,0 @@
-Traceback (most recent call last):
-  File "/global/scratch/users/kevingeng/aviation-bayen/AviationDiffusionModelsKishore/training/train_cfm_swi_dit_distill_savio.py", line 62, in <module>
-    from DataLoaders.ADSBdataset import get_dataloaders
-  File "/global/scratch/users/kevingeng/aviation-bayen/AviationDiffusionModelsKishore/DataLoaders/ADSBdataset.py", line 1, in <module>
-    import netCDF4 as nc
-ModuleNotFoundError: No module named 'netCDF4'
