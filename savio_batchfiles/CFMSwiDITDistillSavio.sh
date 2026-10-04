@@ -22,7 +22,14 @@ mkdir -p logs
 module load anaconda3
 source activate adsb
 
-python -c "import torch; print('CUDA available:', torch.cuda.is_available()); print('Device:', torch.cuda.get_device_name(0) if torch.cuda.is_available() else 'none')"
+# Call the env's interpreter by path so the job can't fall back to another Python
+# (e.g. base anaconda, which has torch but not netCDF4) via the inherited environment.
+PYTHON=$HOME/.conda/envs/adsb/bin/python
+echo "Python: $PYTHON"
+
+# Fail fast with a clear message if the env or GPU isn't usable.
+$PYTHON -c "import torch, numpy, netCDF4; print('torch', torch.__version__, '| netCDF4', netCDF4.__version__); print('CUDA available:', torch.cuda.is_available()); print('Device:', torch.cuda.get_device_name(0) if torch.cuda.is_available() else 'none')" \
+    || { echo "Environment check failed (see .err log)"; exit 1; }
 
 # ---------------------------------------------------------------------------
 # Training run
@@ -38,7 +45,7 @@ cd $REPO/training
 
 # -u: unbuffered stdout so per-epoch lines appear in logs/ as they happen.
 # Per-epoch student metrics are also appended to $OUTPUT_DIR/metrics.csv.
-python -u train_cfm_swi_dit_distill_savio.py \
+$PYTHON -u train_cfm_swi_dit_distill_savio.py \
     --nc_path $NC_PATH \
     --teacher_config $REPO/configs/swi_dit_teacher.json \
     --student_config $REPO/configs/swi_dit_student.json \
@@ -48,5 +55,7 @@ python -u train_cfm_swi_dit_distill_savio.py \
     --batch_size 64 \
     --alpha 0.5 \
     --seed 42
+STATUS=$?
 
-echo "Job finished at $(date)"
+echo "Job finished at $(date) with exit code $STATUS"
+exit $STATUS    # non-zero → Slurm marks the job FAILED instead of COMPLETED
