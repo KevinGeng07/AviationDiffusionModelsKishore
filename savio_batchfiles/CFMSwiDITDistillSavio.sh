@@ -1,8 +1,8 @@
 #!/bin/bash
 # ---------------------------------------------------------------------------
-# SLURM job script: CFM (flow matching) training run, ADS-B trajectory
+# SLURM job script: CFM + SWI_DiT knowledge distillation (6 → 5 layers), ADS-B trajectory
 # ---------------------------------------------------------------------------
-#SBATCH --job-name=cfm_trajectory_full
+#SBATCH --job-name=cfm_swi_dit_distill
 #SBATCH --account=ac_mixedav
 #SBATCH --partition=savio3_gpu
 #SBATCH --qos=gtx2080_gpu3_normal
@@ -11,8 +11,8 @@
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=2
 #SBATCH --time=20:00:00
-#SBATCH --output=logs/cfm_%j.out
-#SBATCH --error=logs/cfm_%j.err
+#SBATCH --output=logs/cfm_swi_dit_distill_%j.out
+#SBATCH --error=logs/cfm_swi_dit_distill_%j.err
 
 # ---------------------------------------------------------------------------
 # Environment setup
@@ -27,17 +27,26 @@ python -c "import torch; print('CUDA available:', torch.cuda.is_available()); pr
 # ---------------------------------------------------------------------------
 # Training run
 # ---------------------------------------------------------------------------
-NC_PATH=/global/scratch/users/kishore26/adsb-diffusion/data/trajectories_adsblol_seq86_stage2.nc
-OUTPUT_DIR=/global/scratch/users/kishore26/adsb-diffusion/checkpoints_cfm
+NC_PATH=/global/scratch/users/kevingeng/aviation-bayen/data/trajectories_adsblol_seq86_stage2.nc
+REPO=/global/scratch/users/kevingeng/aviation-bayen/AviationDiffusionModelsKishore
+TEACHER_CKPT=$REPO/training/checkpoints/swi_dit/best_swi_dit.pt
+OUTPUT_DIR=$REPO/training/checkpoints/swi_dit_distill
 
 mkdir -p $OUTPUT_DIR
 
-cd /global/scratch/users/kishore26/adsb-diffusion/AviationDiffusionModelsKishore/training
+cd $REPO/training
 
-python trainCFMbaseSavio.py \
+# -u: unbuffered stdout so per-epoch lines appear in logs/ as they happen.
+# Per-epoch student metrics are also appended to $OUTPUT_DIR/metrics.csv.
+python -u train_cfm_swi_dit_distill_savio.py \
     --nc_path $NC_PATH \
+    --teacher_config $REPO/configs/swi_dit_teacher.json \
+    --student_config $REPO/configs/swi_dit_student.json \
+    --teacher_ckpt $TEACHER_CKPT \
     --output_dir $OUTPUT_DIR \
     --epochs 100 \
-    --batch_size 64
+    --batch_size 64 \
+    --alpha 0.5 \
+    --seed 42
 
 echo "Job finished at $(date)"

@@ -59,11 +59,11 @@ MODEL_REGISTRY = {
         "type":  "cfm",
         "arch":  "rope_ts",
     },
-    "cfm_kevin_dit": {
-        "name":  "CFMKevinDiT",
-        "ckpt":  str(ROOT / "checkpoints_cfm_kevin_dit" / "best_kevin_dit.pt"),
+    "cfm_swi_dit": {
+        "name":  "CFMSwiDiT",
+        "ckpt":  str(ROOT / "training" / "checkpoints" / "swi_dit" / "best_swi_dit.pt"),
         "type":  "cfm",
-        "arch":  "kevin_dit",
+        "arch":  "swi_dit",
     },
 }
 
@@ -186,9 +186,9 @@ def _build_model(arch: str) -> torch.nn.Module:
     if arch == "rope_ts":
         from models.dit_RoPE_timestamps import TrajectoryDiT as RoPETSDiT
         return RoPETSDiT(d_model=256, n_heads=8, n_layers=6)
-    if arch == "kevin_dit":
-        from models.KEVIN_DiT import TrajectoryDiT as KevinDiT
-        return KevinDiT(d_model=256, n_heads=8, n_layers=6)
+    if arch == "swi_dit":
+        from models.SWI_DiT import TrajectoryDiT as SwiDiT
+        return SwiDiT(d_model=256, n_heads=8, n_layers=6)
     raise ValueError(f"Unknown arch: {arch}")
 
 

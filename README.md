@@ -9,7 +9,7 @@ top of the same transformer backbone:
 - **CFM** — conditional flow matching / rectified flow (predict a velocity field, then integrate an ODE)
 
 and the backbone (a **Diffusion Transformer, DiT**) comes in four variants: the baseline
-with learned positions, two **RoPE** variants, and **KEVIN_DiT** (SwiGLU feed-forward).
+with learned positions, two **RoPE** variants, and **SWI_DiT** (SwiGLU feed-forward).
 
 ---
 
@@ -23,11 +23,10 @@ with learned positions, two **RoPE** variants, and **KEVIN_DiT** (SwiGLU feed-fo
 6. [RoPE — rotary position embeddings](#6-rope--rotary-position-embeddings)
 7. [DDIM — denoising diffusion](#7-ddim--denoising-diffusion)
 8. [CFM — conditional flow matching](#8-cfm--conditional-flow-matching)
-9. [Training](#9-training)
+9. [Training (Savio)](#9-training-savio)
 10. [Evaluation and metrics](#10-evaluation-and-metrics)
 11. [Prediction Explorer UI](#11-prediction-explorer-ui)
-12. [Static prediction maps](#12-static-prediction-maps)
-13. [Gotchas and known issues](#13-gotchas-and-known-issues)
+12. [Gotchas and known issues](#12-gotchas-and-known-issues)
 
 ---
 
@@ -48,38 +47,28 @@ with learned positions, two **RoPE** variants, and **KEVIN_DiT** (SwiGLU feed-fo
 │   ├── dit.py                      # baseline Trajectory DiT (learned pos-emb + t_rel embedding)
 │   ├── dit_RoPE_original.py        # DiT with RoPE over token indices          ("RoPE-A")
 │   ├── dit_RoPE_timestamps.py      # DiT with RoPE over real timestamps        ("RoPE-B")
-│   ├── KEVIN_DiT.py                # baseline DiT with SwiGLU feed-forward
+│   ├── SWI_DiT.py                # baseline DiT with SwiGLU feed-forward
 │   ├── ddim.py                     # cosine noise schedule + forward diffusion
 │   └── cfm.py                      # flow-time sampling, linear interpolation, Euler sampler
 │
 ├── training/
-│   ├── trainDDIMBaseLocal.py       # DDIM + baseline DiT, local run (hardcoded paths)
-│   ├── trainDDIMBaseSAVIO.py       # DDIM + baseline DiT, CLI args (for Savio)
-│   ├── trainCFMbaseLocal.py        # CFM  + baseline DiT, local run
-│   ├── trainCFMbaseSavio.py        # CFM  + baseline DiT, CLI args (for Savio)
-│   ├── trainCFMRoPEOG.py           # CFM  + RoPE-A DiT, local run
-│   ├── trainCFMRoPEtimestamps.py   # CFM  + RoPE-B DiT, local run
-│   ├── trainCFMKevinDIT.py         # CFM  + KEVIN_DiT, local run
-│   └── trainCFMKevinDITSavio.py    # CFM  + KEVIN_DiT, CLI args (for Savio)
+│   ├── train_cfm_swi_dit_savio.py          # CFM + SWI_DiT from scratch (trains the teacher)
+│   ├── train_cfm_swi_dit_distill_savio.py  # CFM + SWI_DiT distillation: frozen teacher → student
+│   └── checkpoints/                        # all training outputs (gitignored)
+│       └── swi_dit/                        # 6-layer teacher: best_swi_dit.pt, last_swi_dit.pt
 │
 ├── savio_batchfiles/
-│   ├── DDIMBaseSavio7MParameterModel.sh   # SLURM job for trainDDIMBaseSAVIO.py
-│   ├── CFMBaseSavio7MParameterModel.sh    # SLURM job for trainCFMbaseSavio.py
-│   └── CFMKevinDITSavio7MParameterModel.sh# SLURM job for trainCFMKevinDITSavio.py
+│   ├── CFMSwiDITSavio7MParameterModel.sh   # SLURM job for train_cfm_swi_dit_savio.py
+│   └── CFMSwiDITDistillSavio.sh            # SLURM job for train_cfm_swi_dit_distill_savio.py
 │
-├── eval/
-│   └── visualization.py            # render DDIM predictions to folium HTML maps
+├── configs/
+│   ├── swi_dit_teacher.json                # teacher architecture + checkpoint path
+│   └── swi_dit_student.json                # student architecture (5 layers)
 │
-├── ui/
-│   ├── app.py                      # Flask "Prediction Explorer" backend
-│   ├── templates/index.html        # Leaflet map front-end
-│   └── requirements.txt
-│
-├── checkpoints_cfm_kevin_dit/      # best_kevin_dit.pt, last_kevin_dit.pt (gitignored)
-├── predictions_ep49_100k/          # pre-rendered DDIM maps (epoch 49, 100k-sample run)
-├── predictions_ep100_100k/         #   … epoch 100, 100k-sample run
-├── predictions_ep100_full/         #   … epoch 100, full-dataset run
-└── predictions.html                # single pre-rendered DDIM map
+└── ui/
+    ├── app.py                      # Flask "Prediction Explorer" backend
+    ├── templates/index.html        # Leaflet map front-end
+    └── requirements.txt
 ```
 
 ---
@@ -92,7 +81,6 @@ Python 3.10+ (developed on 3.13). From the repo root:
 python -m venv venv
 source venv/bin/activate
 pip install torch numpy pandas netCDF4 tqdm flask
-pip install folium      # only for eval/visualization.py
 pip install torchinfo   # only for the `python models/dit.py` shape check
 ```
 
@@ -193,7 +181,7 @@ venv/bin/python -c "import netCDF4 as nc; d=nc.Dataset('Data/trajectories_adsblo
   - `fut`   — normalized steps 43‥85 `(43, 6)`
   - `t_rel` — `(timestamps − timestamps[0])`, z-scored with `t_rel_mean/std` `(86,)`
 - **`get_dataloaders(path, batch_size, subset=None)`** — optionally truncate to the first
-  `subset` windows (the local scripts use `subset=100_000`).
+  `subset` windows (`--subset` on the training scripts).
 
 ---
 
@@ -311,12 +299,12 @@ which lets them both read the history and stay mutually consistent.
 | `dit.py` | learned `pos_emb` + `t_rel` sinusoid MLP (added to tokens) | GELU MLP, 4× | 6.60 M |
 | `dit_RoPE_original.py` (RoPE-A) | RoPE with angles = token index 0‥85 | GELU MLP, 4× | 6.45 M |
 | `dit_RoPE_timestamps.py` (RoPE-B) | RoPE with angles = normalized `t_rel` | GELU MLP, 4× | 6.45 M |
-| `KEVIN_DiT.py` | same as `dit.py` | **SwiGLU, 3×, no bias** | 7.25 M |
+| `SWI_DiT.py` | same as `dit.py` | **SwiGLU, 3×, no bias** | 7.25 M |
 
 The RoPE models drop `pos_emb` and `trel_mlp` (position lives inside attention instead —
 §6) and replace `nn.MultiheadAttention` with a hand-written `RoPEAttention`.
 
-**KEVIN_DiT** swaps the feed-forward for **SwiGLU**:
+**SWI_DiT** swaps the feed-forward for **SwiGLU**:
 
 ```python
 FFN(x) = W_down( SiLU(W_gate x) ⊙ (W_up x) )     # W_gate, W_up: d→3d ;  W_down: 3d→d
@@ -326,8 +314,8 @@ A gated linear unit lets the network learn multiplicative feature interactions; 
 3× instead of 4× width keeps the parameter count similar to the GELU MLP (3 matrices
 instead of 2). It also defines an extra top-level `self.adaLN` that is never used in
 `forward` (≈0.26 M dead parameters — kept because the checkpoint contains it). The
-included checkpoint `checkpoints_cfm_kevin_dit/` is a **6-layer, CFM-trained** KEVIN_DiT
-(epoch 84, val minFDE 824.5 m), trained with `training/trainCFMKevinDIT*.py`.
+included checkpoint `training/checkpoints/swi_dit/` is a **6-layer, CFM-trained** SWI_DiT
+(epoch 84, val minFDE 824.5 m), trained with `training/train_cfm_swi_dit*.py`.
 
 Shape-check any model with `venv/bin/python models/dit.py` (needs `torchinfo`) or
 `venv/bin/python models/dit_RoPE_original.py`.
@@ -376,8 +364,8 @@ spectrum therefore effectively uses the low-θ (long-range) end differently than
 
 ## 7. DDIM — denoising diffusion
 
-Files: `models/ddim.py`, `training/trainDDIM*.py`, sampler in `ui/app.py` /
-`eval/visualization.py`.
+Files: `models/ddim.py`, sampler in `ui/app.py`. (No DDIM training script is kept in
+this repo; the DDIM description is for reference and for the UI's `ddim` model.)
 
 ### 7.1 Forward (noising) process
 
@@ -426,7 +414,7 @@ starting noise ⇒ different futures. In the UI, the "steps" slider controls thi
 
 ## 8. CFM — conditional flow matching
 
-Files: `models/cfm.py`, `training/trainCFM*.py`.
+Files: `models/cfm.py`, `training/train_cfm_swi_dit*_savio.py`.
 
 ### 8.1 Probability path
 
@@ -482,70 +470,126 @@ Because the learned paths are close to straight, a simple first-order integrator
 
 ---
 
-## 9. Training
+## 9. Training (Savio)
 
-### 9.1 Common setup (all six scripts)
+All training runs on Berkeley's **Savio** cluster through the SLURM wrappers in
+`savio_batchfiles/`. Both scripts take CLI arguments (no hardcoded paths), so they also
+run locally for quick tests — just slowly on CPU.
+
+| script | batch file | what it does | output (on Savio) |
+|---|---|---|---|
+| `train_cfm_swi_dit_savio.py` | `CFMSwiDITSavio7MParameterModel.sh` | trains a SWI_DiT from scratch with CFM | `$REPO/training/checkpoints/swi_dit/` |
+| `train_cfm_swi_dit_distill_savio.py` | `CFMSwiDITDistillSavio.sh` | distills the trained 6-layer SWI_DiT into a 5-layer student | `$REPO/training/checkpoints/swi_dit_distill/` |
+
+The 6-layer teacher is **already trained** (`training/checkpoints/swi_dit/best_swi_dit.pt`,
+epoch 84, val minFDE 824.5 m), so the normal workflow only runs the distillation job.
+
+### 9.1 Common setup
 
 - **Optimizer:** AdamW, `lr = 1e-4`, `weight_decay = 0.01`, grad-norm clip 1.0.
 - **Schedule:** linear warm-up for 1000 steps, then cosine annealing over the epochs.
 - **EMA:** an exponential moving average of the weights (`decay = 0.9999`) is kept and is
-  what validation, the UI and the visualizer use (`ema_state`).
+  what validation and the UI use (`ema_state`).
 - **Batch size** 64; **epochs** 100.
 - **Checkpoints** (`.pt` dicts): `epoch`, `model_state`, `ema_state`, `optimizer_state`,
-  `val_fde`. `last.pt` is written every epoch (training auto-resumes from it), `best.pt`
-  whenever validation FDE improves.
-- **Validation:** CFM scripts print a *rough* minFDE (5 val batches) every epoch and a
-  *proper* one (20 batches ≈ 1280 windows) every 5 epochs; DDIM scripts validate every 5 epochs.
+  `val_fde` (+ more for distillation, below). `last.pt` is written every epoch and training
+  auto-resumes from it; `best.pt` is written whenever validation minFDE improves.
+- **Split:** aircraft-level train/val/test split, deterministic for a given `.nc`,
+  `--subset` and seed (see §3.4).
 
-### 9.2 Local runs
+### 9.2 Distillation — `train_cfm_swi_dit_distill_savio.py`
 
-The `*Local.py`, `trainCFMRoPEOG.py` and `trainCFMRoPEtimestamps.py` scripts have their
-settings hardcoded in the `if __name__ == "__main__":` block — notably a Windows path
-`nc_path = r"D:\trajectories_adsblol_seq86_stage2.nc"` and `subset = 100_000`. Edit those
-lines, then:
+The **teacher** (6-layer SWI_DiT) is loaded from its checkpoint and only ever run in
+inference: `eval()` mode (no dropout), `requires_grad_(False)`, never given to the
+optimizer. On every training batch it predicts a velocity for the same noisy input the
+student sees, and the **student** (5-layer SWI_DiT) learns from both the data and the teacher:
 
-```bash
-venv/bin/python training/trainCFMbaseLocal.py         # → checkpoints_cfm/
-venv/bin/python training/trainDDIMBaseLocal.py        # → checkpoints/
-venv/bin/python training/trainCFMRoPEOG.py            # → checkpoints_rope_a/
-venv/bin/python training/trainCFMRoPEtimestamps.py    # → checkpoints_rope_b/
-venv/bin/python training/trainCFMKevinDIT.py          # → checkpoints_cfm_kevin_dit/
+```
+x_t   = (1 - t)·noise + t·fut              t ~ logit-normal, shared by both models
+v_tgt = fut - noise                        ground-truth CFM target
+v_s   = student(obs, x_t, t, t_rel)
+v_T   = teacher(obs, x_t, t, t_rel)        no grad
+
+L_gt  = weighted_mse(v_s, v_tgt)           the normal CFM loss
+L_kd  = weighted_mse(v_s, v_T)             distillation loss
+L     = alpha · L_gt + (1 - alpha) · L_kd  alpha = 0.5 by default (--alpha)
 ```
 
-### 9.3 CLI runs / Savio
+Both terms use the standard CFM weighting (last ¼ of the horizon ×2).
+
+**Configs.** Architectures come from two JSON files passed as arguments:
+
+```json
+// configs/swi_dit_teacher.json                    // configs/swi_dit_student.json
+{ "name": "swi_dit_6L_teacher",                    { "name": "swi_dit_5L_student",
+  "checkpoint": "training/checkpoints/swi_dit/       "model": { ..., "n_layers": 5 } }
+                 best_swi_dit.pt",
+  "model": { "d_model": 256, "n_heads": 8,
+             "n_layers": 6, "dropout": 0.1, ... } }
+```
+
+`model` holds `TrajectoryDiT` keyword arguments. Relative paths resolve from the repo
+root; `--teacher_ckpt` overrides the checkpoint path. Both configs are copied into the
+output folder and stored in every checkpoint (with `train_config`).
+
+**Per-epoch student metrics** are printed and appended to `<output_dir>/metrics.csv`
+(validation metrics use the EMA student and fixed seeds, so they're comparable across epochs):
+
+| column | meaning |
+|---|---|
+| `train_loss`, `train_loss_gt`, `train_loss_kd` | total / normal CFM / distillation loss, averaged over the epoch |
+| `val_loss`, `val_loss_gt`, `val_loss_kd` | the same three losses on 20 validation batches |
+| `val_kl_endpoint`, `val_kl_path` | KL(teacher ‖ student) between 2-D Gaussians fitted to K = 20 sampled (x, y) positions per window — at the final step / averaged over all 43 steps (nats) |
+| `val_minfde_rough`, `val_minfde` | minFDE@5 in metres — every epoch on 5 batches / every 5 epochs on 20 batches |
+| `epoch`, `lr`, `epoch_time_s` | bookkeeping |
+
+The teacher's minFDE on the same validation batches is printed at startup and alongside
+every proper FDE, for direct comparison.
+
+**Reproducibility.** `--seed` (default 42) sets the split and all RNGs, and the torch RNG
+is re-seeded with `seed + epoch` each epoch, so batch order and noise are identical with
+or without a resume. Resume also restores the LR scheduler and step counter.
+
+### 9.3 Running on Savio
+
+1. **Clone the repo** into your scratch directory (the batch files use
+   `REPO=/global/scratch/users/kevingeng/aviation-bayen/AviationDiffusionModelsKishore`).
+2. **Copy the data and the teacher** — both are gitignored:
+   ```bash
+   # from your machine, at the repo root
+   scp Data/trajectories_adsblol_seq86_stage2.nc \
+       <you>@dtn.brc.berkeley.edu:/global/scratch/users/kevingeng/aviation-bayen/data/
+   ssh <you>@dtn.brc.berkeley.edu "mkdir -p /global/scratch/users/kevingeng/aviation-bayen/AviationDiffusionModelsKishore/training/checkpoints/swi_dit"
+   scp training/checkpoints/swi_dit/best_swi_dit.pt \
+       <you>@dtn.brc.berkeley.edu:/global/scratch/users/kevingeng/aviation-bayen/AviationDiffusionModelsKishore/training/checkpoints/swi_dit/
+   ```
+3. **Python env:** a conda env named `adsb` with `torch`, `numpy`, `netCDF4`
+   (the batch files run `module load anaconda3; source activate adsb`).
+4. **Submit** (from the repo root, so `logs/` lands there):
+   ```bash
+   sbatch savio_batchfiles/CFMSwiDITDistillSavio.sh          # distillation (normal workflow)
+   sbatch savio_batchfiles/CFMSwiDITSavio7MParameterModel.sh # only to retrain the teacher
+   squeue -u $USER                                           # check the queue
+   ```
+5. **Monitor:** `tail -f logs/cfm_swi_dit_distill_<jobid>.out` (stdout is unbuffered) and
+   `$REPO/training/checkpoints/swi_dit_distill/metrics.csv`.
+
+Each job requests 1× GTX 2080 Ti for 20 h on `savio3_gpu` under account `ac_mixedav`; edit
+the `#SBATCH` lines if your allocation differs. Resubmitting the same job resumes from
+`last.pt` in its output folder.
+
+### 9.4 Quick local test
 
 ```bash
-venv/bin/python training/trainCFMbaseSavio.py \
+venv/bin/python training/train_cfm_swi_dit_distill_savio.py \
     --nc_path Data/trajectories_adsblol_seq86_stage2.nc \
-    --output_dir checkpoints_cfm --epochs 100 --batch_size 64 \
-    [--d_model 256] [--n_layers 6] [--subset 100000]
-
-venv/bin/python training/trainDDIMBaseSAVIO.py   --nc_path ... --output_dir checkpoints
-venv/bin/python training/trainCFMKevinDITSavio.py --nc_path ... --output_dir checkpoints_cfm_kevin_dit
+    --teacher_config configs/swi_dit_teacher.json \
+    --student_config configs/swi_dit_student.json \
+    --subset 3000 --epochs 1 --kl_batches 1
 ```
 
-On the Berkeley **Savio** cluster, submit the SLURM wrappers (1× GTX 2080 Ti, 20 h,
-conda env `adsb`, paths under `/global/scratch/users/kishore26/adsb-diffusion/`):
-
-```bash
-sbatch savio_batchfiles/CFMBaseSavio7MParameterModel.sh
-sbatch savio_batchfiles/DDIMBaseSavio7MParameterModel.sh
-sbatch savio_batchfiles/CFMKevinDITSavio7MParameterModel.sh
-# logs → logs/cfm_<jobid>.out / logs/ddim_<jobid>.out
-```
-
-Edit `NC_PATH`, `OUTPUT_DIR` and the `cd` line for your own scratch directory.
-
-### 9.4 Training a different backbone
-
-Every script picks its model with a single import, e.g. in `trainCFMbaseSavio.py`:
-
-```python
-from models.dit import TrajectoryDiT          # swap for models.KEVIN_DiT / dit_RoPE_* …
-```
-
-Constructor arguments are passed explicitly (`n_layers=6` by default), so a class's own
-default `n_layers` is not what gets trained unless you change the script/CLI flag.
+Expect minutes even for a tiny subset on a Mac: the full `.nc` is decompressed before
+subsetting, and DataLoader workers are slow to start on macOS.
 
 ---
 
@@ -560,7 +604,7 @@ default `n_layers` is not what gets trained unless you change the script/CLI fla
 - The best validation score is stored in each checkpoint:
 
 ```bash
-venv/bin/python -c "import torch; c=torch.load('checkpoints_cfm_kevin_dit/best_kevin_dit.pt', map_location='cpu', weights_only=False); print(c['epoch'], c['val_fde'])"
+venv/bin/python -c "import torch; c=torch.load('training/checkpoints/swi_dit/best_swi_dit.pt', map_location='cpu', weights_only=False); print(c['epoch'], c['val_fde'])"
 ```
 
 - **ADE (average displacement error)** — mean `(x, y)` distance over every future step,
@@ -601,7 +645,7 @@ only if its checkpoint file exists:
 | `cfm` | `checkpoints_cfm/last.pt` | CFM | `dit.py` |
 | `cfm_rope_og` | `checkpoints_cfm_rope_og/best.pt` | CFM | RoPE-A |
 | `cfm_rope_ts` | `checkpoints_cfm_rope_ts/best.pt` | CFM | RoPE-B |
-| `cfm_kevin_dit` | `checkpoints_cfm_kevin_dit/best_kevin_dit.pt` | CFM | KEVIN_DiT (6 layers), shown as "CFMKevinDiT" |
+| `cfm_swi_dit` | `training/checkpoints/swi_dit/best_swi_dit.pt` | CFM | SWI_DiT (6 layers), shown as "CFMSwiDiT" |
 
 To add a model: add a branch in `_build_model(arch)` that constructs it with the right
 `n_layers`, and a registry entry with `ckpt`, `type` (`"ddim"`/`"cfm"`) and `arch`.
@@ -627,46 +671,28 @@ API (JSON): `GET /api/status`, `GET /api/flights`, `GET /api/models`,
 
 ---
 
-## 12. Static prediction maps
+## 12. Gotchas and known issues
 
-`eval/visualization.py` loads a **DDIM** checkpoint with the baseline DiT, samples 20
-futures for batches of validation windows and writes folium maps
-(`predictions_N.html`: observed track, true future, sampled futures). Edit the
-`nc_path`, `ckpt_path` and `output_dir` in its `__main__` block, then:
-
-```bash
-pip install folium
-venv/bin/python eval/visualization.py
-```
-
-The committed `predictions_ep*/` folders and `predictions.html` are outputs of this
-script; open them directly in a browser.
-
----
-
-## 13. Gotchas and known issues
-
-- **Hardcoded Windows paths** (`D:\trajectories_adsblol_seq86_stage2.nc`, `C:\dev\work\…`, `checkpoints\best.pt`)
-  in the local training scripts, `eval/visualization.py` and
-  `DataLoaders/sanityCheckMathurinNetCDF.py`. Change them to your local path.
+- **Hardcoded Windows path** (`D:\trajectories_adsblol_seq86_stage2.nc`) in
+  `DataLoaders/sanityCheckMathurinNetCDF.py`. Change it to your local path.
 - **`trajectory` must be absolute positions.** The dataloader normalizes `trajectory`
   with `feature_mean/std` and the UI plots it directly. `ADSBnetcdfbuilder.py` writes
   absolute `x, y, z, vx, vy, vz`; an earlier version wrote `dx, dy` deltas, which are
   incompatible with the trained models.
 - **Normalization stats are not saved in checkpoints.** A model only behaves correctly
   with the `.nc` (and hence `feature_mean/std`, `t_rel_mean/std`) it was trained on.
-- **Checkpoint folder names differ between training and UI:** the RoPE scripts write
-  `checkpoints_rope_a/` and `checkpoints_rope_b/`, but the UI looks in
-  `checkpoints_cfm_rope_og/` and `checkpoints_cfm_rope_ts/`. Rename or edit the registry.
+- **UI models without checkpoints:** the UI registry still lists DDIM, CFM and the two RoPE
+  models; their checkpoints (and training scripts) are not in this repo, so they show as
+  unavailable. Only `cfm_swi_dit` loads.
 - **Memory:** the dataloader loads the full `.nc` into RAM (~4 GB for 1.35 M windows);
   use `subset=` on small machines. The builder at `--offset 1` needs far more than 16 GB.
 - **`num_workers=4, pin_memory=True`** in `get_dataloaders` can be slow or warn on
   macOS/CPU; lower `num_workers` if needed.
 - **`sanityCheckMathurinNetCDF.py`** also calls `torch.cuda.get_device_name(0)`, which
   fails on machines without CUDA.
-- **`.gitignore`** excludes `Data/adsb/`, `*.nc`, `*.csv`, `checkpoints/`, `checkpoints_cfm/`
-  and `checkpoints_cfm_kevin_dit/`, but not the RoPE checkpoint folders — avoid committing
-  them by accident (each `.pt` is ~110 MB, over GitHub's 100 MB file limit).
+- **`.gitignore`** excludes `Data/adsb/`, `*.nc`, `*.csv` and any `checkpoints/` folder
+  (including `training/checkpoints/`). Each `.pt` is ~110 MB, over GitHub's 100 MB file
+  limit, so checkpoints must be moved with `scp`, never committed.
 
 ---
 

@@ -6,6 +6,6 @@ __pycache__/
 Data/adsb/
 *.nc
 *.csv
+# matches checkpoints/ at any depth, incl. training/checkpoints/
 checkpoints/
 checkpoints_cfm/
-checkpoints_cfm_kevin_dit/
