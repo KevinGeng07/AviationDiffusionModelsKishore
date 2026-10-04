@@ -8,5 +8,4 @@ Data/adsb/
 *.csv
 # matches checkpoints/ at any depth, incl. training/checkpoints/
 checkpoints/
-finished_ckpt/**/*.pt
 checkpoints_cfm/
