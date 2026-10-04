@@ -4,7 +4,7 @@
     "obs_len": 43,
     "fut_len": 43,
     "in_dim": 6,
-    "d_model": 256,
+    "d_model": 128,
     "n_heads": 8,
     "n_layers": 4,
     "dropout": 0.1
