@@ -52,7 +52,7 @@ $PYTHON -u train_cfm_swi_dit_distill_savio.py \
     --teacher_ckpt $TEACHER_CKPT \
     --output_dir $OUTPUT_DIR \
     --epochs 100 \
-    --batch_size 64 \
+    --batch_size 256 \
     --alpha 0.5 \
     --seed 42
 STATUS=$?
