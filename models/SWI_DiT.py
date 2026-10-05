@@ -63,7 +63,7 @@ class SwiGLU(nn.Module):
         return self.down(gate * up)
 
 class AdaLNBlock(nn.Module):
-    def __init__(self, d_model, n_heads, dropout=0.1):
+    def __init__(self, d_model, n_heads, dropout=0.1, ff_expansion=3):
         super().__init__()
 
         # Layer norms (no affine — AdaLN supplies scale/shift instead)
@@ -74,9 +74,8 @@ class AdaLNBlock(nn.Module):
         self.attn = nn.MultiheadAttention(d_model, n_heads,
                                            dropout=dropout, batch_first=True)
 
-        # Feedforward
-        # TODO: REDO THIS TO MAKE IT COMPATIBLE W/ 3* EXPANSION.
-        self.ff = SwiGLU(d_model, expansion=3, bias=False)
+        # Feedforward: SwiGLU with hidden width ff_expansion * d_model
+        self.ff = SwiGLU(d_model, expansion=ff_expansion, bias=False)
 
         # AdaLN projection: conditioning vector → 4 vectors (s1, b1, s2, b2)
         # initialized to zero so conditioning is identity at start of training
@@ -123,7 +122,8 @@ class TrajectoryDiT(nn.Module):
                  d_model  = 256,
                  n_heads  = 8,
                  n_layers = 6,
-                 dropout  = 0.1):
+                 dropout  = 0.1,
+                 ff_expansion = 3):
         super().__init__()
 
         self.obs_len = obs_len
@@ -153,7 +153,7 @@ class TrajectoryDiT(nn.Module):
 
         # ── Stack of AdaLN transformer blocks ───────────────────────────────
         self.blocks = nn.ModuleList([
-            AdaLNBlock(d_model, n_heads, dropout)
+            AdaLNBlock(d_model, n_heads, dropout, ff_expansion)
             for _ in range(n_layers)                             # hint: n_layers blocks
         ])
 

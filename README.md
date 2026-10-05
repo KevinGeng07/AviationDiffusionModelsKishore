@@ -646,9 +646,10 @@ only if its checkpoint file exists:
 | `cfm_rope_og` | `checkpoints_cfm_rope_og/best.pt` | CFM | RoPE-A |
 | `cfm_rope_ts` | `checkpoints_cfm_rope_ts/best.pt` | CFM | RoPE-B |
 | `cfm_swi_dit` | `checkpoints/swi_dit/best_swi_dit.pt` | CFM | SWI_DiT (6 layers), shown as "CFMSwiDiT" |
+| `cfm_swi_dit_distill_4L` | `training/checkpoints/swi_dit_distill_4L/best.pt` | CFM | SWI_DiT (4-layer distilled student), shown as "CFMSwiDiT Distill 4L" |
 
-To add a model: add a branch in `_build_model(arch)` that constructs it with the right
-`n_layers`, and a registry entry with `ckpt`, `type` (`"ddim"`/`"cfm"`) and `arch`.
+To add a model: add a registry entry with `ckpt`, `type` (`"ddim"`/`"cfm"`), `arch` and,
+if it isn't 6, `n_layers` (passed to `_build_model`). A new backbone also needs a branch in `_build_model(arch)`.
 
 **Controls / behaviour**
 

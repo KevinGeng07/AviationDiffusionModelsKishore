@@ -4,9 +4,10 @@
     "obs_len": 43,
     "fut_len": 43,
     "in_dim": 6,
-    "d_model": 128,
+    "d_model": 256,
     "n_heads": 8,
     "n_layers": 4,
-    "dropout": 0.1
+    "dropout": 0.1,
+    "ff_expansion": 3
   }
 }

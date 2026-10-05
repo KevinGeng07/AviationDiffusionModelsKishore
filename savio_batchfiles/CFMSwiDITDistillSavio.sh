@@ -54,7 +54,7 @@ $PYTHON -u train_cfm_swi_dit_distill_savio.py \
     --output_dir $OUTPUT_DIR \
     --epochs 100 \
     --batch_size 256 \
-    --alpha 0.5 \
+    --alpha 0.7 \
     --seed 42
 STATUS=$?
 

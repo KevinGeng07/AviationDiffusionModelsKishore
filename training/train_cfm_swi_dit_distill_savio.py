@@ -21,12 +21,22 @@ standard CFM loss: last quarter of the future horizon weighted ×2):
 
     L_gt     = weighted_mse(v_s, v_tgt)           ("normal" CFM loss)
     L_kd     = weighted_mse(v_s, v_T)
-    L        = alpha · L_gt + (1 - alpha) · L_kd     (default alpha = 0.5)
+    L        = alpha · L_gt / s_gt + (1 - alpha) · L_kd / s_kd     (default alpha = 0.7)
+
+L_gt and L_kd differ in size by ~20× (L_gt keeps the irreducible noise of the
+CFM target; L_kd only measures the student-teacher gap), so with raw losses
+alpha would not set their relative weight. Each is therefore normalized by
+s_gt / s_kd, an EMA of its own recent (detached) value, so both terms are ~1
+and alpha sets their real share of the gradient: 0.7 ground truth, 0.3 teacher.
 
 Per-epoch metrics (printed and appended to <output_dir>/metrics.csv), all for
 the EMA student unless noted:
-    train_loss, train_loss_gt, train_loss_kd   averaged over the epoch (raw student)
+    train_loss, train_loss_gt, train_loss_kd   averaged over the epoch (raw student);
+                                               train_loss is the normalized total,
+                                               _gt / _kd are the raw (unnormalized) terms
     val_loss, val_loss_gt, val_loss_kd         same losses on validation batches
+                                               (val_loss uses the current scales)
+    loss_scale_gt, loss_scale_kd               the normalizers s_gt / s_kd at epoch end
     val_kl_endpoint, val_kl_path               KL(teacher ‖ student) between Gaussians
                                                fitted to K sampled (x, y) positions,
                                                at the final step / averaged over all
@@ -73,6 +83,7 @@ METRIC_FIELDS = [
     "val_loss", "val_loss_gt", "val_loss_kd",
     "val_kl_endpoint", "val_kl_path",
     "val_minfde_rough", "val_minfde",
+    "loss_scale_gt", "loss_scale_kd",
 ]
 
 
@@ -112,6 +123,28 @@ class EMA:
 
     def __call__(self, *args, **kwargs):
         return self.shadow(*args, **kwargs)
+
+
+class LossNormalizer:
+    """
+    Running scale of a loss term: an EMA of its detached value. Dividing the
+    loss by this scale keeps the term ~1 without changing its gradient
+    direction, so terms of very different sizes can be weighted by alpha.
+    """
+    def __init__(self, decay=0.99, eps=1e-8):
+        self.decay = decay
+        self.eps   = eps
+        self.scale = None           # set from the first batch
+
+    def update(self, loss):
+        value = loss.detach().item()
+        if self.scale is None:
+            self.scale = value
+        else:
+            self.scale = self.decay * self.scale + (1 - self.decay) * value
+
+    def __call__(self, loss):
+        return loss / (self.scale + self.eps)
 
 
 def weighted_mse(pred, target):
@@ -176,8 +209,13 @@ def validate(model, val_loader, device, feat_std, seed, max_batches=20):
     return total_fde / n_batches
 
 
-def validate_losses(student, teacher, val_loader, device, alpha, seed, max_batches=20):
-    """Distillation losses on validation batches with fixed flow times / noise."""
+def validate_losses(student, teacher, val_loader, device, alpha, gt_scale, kd_scale,
+                    seed, max_batches=20):
+    """
+    Distillation losses on validation batches with fixed flow times / noise.
+    The total uses the training normalizers' current scales; the _gt / _kd
+    terms are returned raw, so they stay comparable across epochs.
+    """
     student.eval()
     torch.manual_seed(seed)
     tot = tot_gt = tot_kd = 0.0
@@ -199,7 +237,7 @@ def validate_losses(student, teacher, val_loader, device, alpha, seed, max_batch
 
             loss_gt = weighted_mse(v_pred, v_tgt).item()
             loss_kd = weighted_mse(v_pred, v_teacher).item()
-            tot    += alpha * loss_gt + (1 - alpha) * loss_kd
+            tot    += alpha * loss_gt / gt_scale + (1 - alpha) * loss_kd / kd_scale
             tot_gt += loss_gt
             tot_kd += loss_kd
             n_batches += 1
@@ -281,7 +319,7 @@ def train(
     weight_decay   = 0.01,
     grad_clip      = 1.0,
     warmup_steps   = 1000,
-    alpha          = 0.5,
+    alpha          = 0.7,
     seed           = 42,
     kl_samples     = 20,
     kl_batches     = 5,
@@ -348,6 +386,9 @@ def train(
         "epochs":       epochs,
     }
 
+    norm_gt     = LossNormalizer()
+    norm_kd     = LossNormalizer()
+
     start_epoch = 0
     best_fde    = float("inf")
     global_step = 0
@@ -361,6 +402,8 @@ def train(
         if "scheduler_state" in ckpt:
             scheduler.load_state_dict(ckpt["scheduler_state"])
         best_fde    = ckpt.get("best_fde", best_fde)
+        norm_gt.scale = ckpt.get("loss_scale_gt")
+        norm_kd.scale = ckpt.get("loss_scale_kd")
         global_step = ckpt.get("global_step", global_step)
         start_epoch = ckpt["epoch"] + 1
         print(f"Resumed at epoch {start_epoch}")
@@ -391,7 +434,11 @@ def train(
 
             loss_gt = weighted_mse(v_pred, v_tgt)
             loss_kd = weighted_mse(v_pred, v_teacher)
-            loss    = alpha * loss_gt + (1 - alpha) * loss_kd
+
+            # Normalize each term by its running size, then weight
+            norm_gt.update(loss_gt)
+            norm_kd.update(loss_kd)
+            loss    = alpha * norm_gt(loss_gt) + (1 - alpha) * norm_kd(loss_kd)
 
             optimizer.zero_grad()
             loss.backward()
@@ -426,7 +473,8 @@ def train(
 
         # ── Per-epoch student metrics (EMA weights) ───────────────────────
         val_loss, val_gt, val_kd = validate_losses(
-            ema.shadow, teacher, val_loader, device, alpha, seed, max_batches=20
+            ema.shadow, teacher, val_loader, device, alpha,
+            norm_gt.scale, norm_kd.scale, seed, max_batches=20,
         )
         kl_end, kl_path = validate_kl(
             ema.shadow, teacher, val_loader, device, feat_std, seed,
@@ -446,6 +494,8 @@ def train(
             "val_kl_endpoint":  f"{kl_end:.4f}",
             "val_kl_path":      f"{kl_path:.4f}",
             "val_minfde_rough": f"{rough_fde:.1f}",
+            "loss_scale_gt":    f"{norm_gt.scale:.6f}",
+            "loss_scale_kd":    f"{norm_kd.scale:.6f}",
         }
 
         checkpoint = {
@@ -455,6 +505,8 @@ def train(
             "optimizer_state": optimizer.state_dict(),
             "scheduler_state": scheduler.state_dict(),
             "global_step":     global_step,
+            "loss_scale_gt":   norm_gt.scale,
+            "loss_scale_kd":   norm_kd.scale,
             "best_fde":        best_fde,
             "teacher_val_fde": teacher_fde,
             "teacher_config":  teacher_cfg,
@@ -504,8 +556,9 @@ if __name__ == "__main__":
     parser.add_argument("--output_dir", type=str, default=str(CHECKPOINT_DIR / "swi_dit_distill"))
     parser.add_argument("--epochs", type=int, default=100)
     parser.add_argument("--batch_size", type=int, default=64)
-    parser.add_argument("--alpha", type=float, default=0.5,
-                         help="Weight on the ground-truth CFM loss; (1 - alpha) goes to the teacher-matching loss")
+    parser.add_argument("--alpha", type=float, default=0.7,
+                         help="Weight on the normalized ground-truth CFM loss; (1 - alpha) goes to "
+                              "the normalized teacher-matching loss")
     parser.add_argument("--seed", type=int, default=42,
                          help="Seeds the train/val/test split and all RNGs")
     parser.add_argument("--kl_samples", type=int, default=20,

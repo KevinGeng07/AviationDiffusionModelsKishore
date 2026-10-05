@@ -65,6 +65,13 @@ MODEL_REGISTRY = {
         "type":  "cfm",
         "arch":  "swi_dit",
     },
+    "cfm_swi_dit_distill_4L": {
+        "name":     "CFMSwiDiT Distill 4L",
+        "ckpt":     str(ROOT / "training" / "checkpoints" / "swi_dit_distill_4L" / "best.pt"),
+        "type":     "cfm",
+        "arch":     "swi_dit",
+        "n_layers": 4,
+    },
 }
 
 # ── Global state ───────────────────────────────────────────────────────────────
@@ -177,7 +184,7 @@ def load_data() -> None:
 
 
 # ── Model loading ──────────────────────────────────────────────────────────────
-def _build_model(arch: str) -> torch.nn.Module:
+def _build_model(arch: str, n_layers: int = 6) -> torch.nn.Module:
     if arch == "dit":
         return TrajectoryDiT(d_model=256, n_heads=8, n_layers=6)
     if arch == "rope_og":
@@ -188,7 +195,7 @@ def _build_model(arch: str) -> torch.nn.Module:
         return RoPETSDiT(d_model=256, n_heads=8, n_layers=6)
     if arch == "swi_dit":
         from models.SWI_DiT import TrajectoryDiT as SwiDiT
-        return SwiDiT(d_model=256, n_heads=8, n_layers=6)
+        return SwiDiT(d_model=256, n_heads=8, n_layers=n_layers)
     raise ValueError(f"Unknown arch: {arch}")
 
 
@@ -206,7 +213,7 @@ def load_model(model_id: str) -> dict | None:
 
     log.info("Loading model %s from %s …", model_id, ckpt_path)
     try:
-        model = _build_model(cfg["arch"]).to(DEVICE)
+        model = _build_model(cfg["arch"], cfg.get("n_layers", 6)).to(DEVICE)
         ckpt  = torch.load(str(ckpt_path), map_location=DEVICE, weights_only=False)
         state = ckpt.get("ema_state") or ckpt.get("model_state")
         model.load_state_dict(state)
