@@ -1,12 +1,12 @@
 {
-  "name": "swi_dit_4L_student",
+  "name": "swi_dit_2L_student",
   "model": {
     "obs_len": 43,
     "fut_len": 43,
     "in_dim": 6,
     "d_model": 256,
     "n_heads": 8,
-    "n_layers": 4,
+    "n_layers": 2,
     "dropout": 0.1,
     "ff_expansion": 3
   }
