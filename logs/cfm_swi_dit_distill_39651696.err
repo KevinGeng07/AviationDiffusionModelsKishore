@@ -1,0 +1,2 @@
+[W1005 17:02:08.682584140 CUDACachingAllocator.cpp:3934] memory allocation failed with OOM on device 0 while trying to allocate 1352663040 bytes (free: 647036928, total: 11346575360).
+[2026-10-06T12:50:48.299] error: *** JOB 39651696 ON n0159.savio3 CANCELLED AT 2026-10-06T12:50:48 DUE TO TIME LIMIT ***
