@@ -38,7 +38,7 @@ NC_PATH=/global/scratch/users/kevingeng/aviation-bayen/data/trajectories_adsblol
 REPO=/global/scratch/users/kevingeng/aviation-bayen/AviationDiffusionModelsKishore
 TEACHER_CKPT=$REPO/training/checkpoints/swi_dit/best_swi_dit.pt
 # separate folder per student size: resuming a 4-layer run from a 5-layer last.pt would fail
-OUTPUT_DIR=$REPO/training/checkpoints/swi_dit_distill_4L
+OUTPUT_DIR=$REPO/training/checkpoints/swi_dit_distill_2L
 
 mkdir -p $OUTPUT_DIR
 
