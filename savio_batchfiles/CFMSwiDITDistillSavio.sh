@@ -1,6 +1,11 @@
 #!/bin/bash
 # ---------------------------------------------------------------------------
-# SLURM job script: CFM + SWI_DiT knowledge distillation (6 → 4 layers), ADS-B trajectory
+# SLURM job script: CFM + SWI_DiT knowledge distillation (1 GPU per job), ADS-B trajectory
+#
+# Run settings can be passed at submit time (defaults below), so several runs can be
+# submitted as separate 1-GPU jobs — see savio_batchfiles/submit_distill_runs.sh:
+#   sbatch --job-name=<name> --export=ALL,RUN_NAME=<name>,STUDENT_CONFIG=<json>,ALPHA=<a> \
+#          savio_batchfiles/CFMSwiDITDistillSavio.sh
 # ---------------------------------------------------------------------------
 #SBATCH --job-name=cfm_swi_dit_distill
 #SBATCH --account=ac_mixedav
@@ -11,8 +16,8 @@
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=2
 #SBATCH --time=20:00:00
-#SBATCH --output=logs/cfm_swi_dit_distill_%j.out
-#SBATCH --error=logs/cfm_swi_dit_distill_%j.err
+#SBATCH --output=logs/%x_%j.out      # %x = job name, %j = job id
+#SBATCH --error=logs/%x_%j.err
 
 # ---------------------------------------------------------------------------
 # Environment setup
@@ -37,8 +42,20 @@ $PYTHON -c "import torch, numpy, netCDF4; print('torch', torch.__version__, '| n
 NC_PATH=/global/scratch/users/kevingeng/aviation-bayen/data/trajectories_adsblol_seq86_stage2.nc
 REPO=/global/scratch/users/kevingeng/aviation-bayen/AviationDiffusionModelsKishore
 TEACHER_CKPT=$REPO/training/checkpoints/swi_dit/best_swi_dit.pt
-# separate folder per student size: resuming a 4-layer run from a 5-layer last.pt would fail
-OUTPUT_DIR=$REPO/training/checkpoints/swi_dit_distill_4L
+
+# Per-run settings (override with sbatch --export=ALL,VAR=value,...)
+RUN_NAME=${RUN_NAME:-swi_dit_distill_4L}
+STUDENT_CONFIG=${STUDENT_CONFIG:-$REPO/configs/swi_dit_student.json}
+ALPHA=${ALPHA:-0.7}
+EPOCHS=${EPOCHS:-100}
+BATCH_SIZE=${BATCH_SIZE:-256}
+SEED=${SEED:-42}
+# one output folder per run: runs must never share last.pt / best.pt / metrics.csv
+OUTPUT_DIR=$REPO/training/checkpoints/$RUN_NAME
+
+echo "Run: $RUN_NAME | student: $STUDENT_CONFIG | alpha=$ALPHA | epochs=$EPOCHS | batch=$BATCH_SIZE | seed=$SEED"
+echo "Output: $OUTPUT_DIR"
+[ -f "$STUDENT_CONFIG" ] || { echo "Student config not found: $STUDENT_CONFIG"; exit 1; }
 
 mkdir -p $OUTPUT_DIR
 
@@ -49,13 +66,13 @@ cd $REPO/training
 $PYTHON -u train_cfm_swi_dit_distill_savio.py \
     --nc_path $NC_PATH \
     --teacher_config $REPO/configs/swi_dit_teacher.json \
-    --student_config $REPO/configs/swi_dit_student.json \
+    --student_config $STUDENT_CONFIG \
     --teacher_ckpt $TEACHER_CKPT \
     --output_dir $OUTPUT_DIR \
-    --epochs 100 \
-    --batch_size 256 \
-    --alpha 0.7 \
-    --seed 42
+    --epochs $EPOCHS \
+    --batch_size $BATCH_SIZE \
+    --alpha $ALPHA \
+    --seed $SEED
 STATUS=$?
 
 echo "Job finished at $(date) with exit code $STATUS"
