@@ -59,6 +59,27 @@ echo "Output: $OUTPUT_DIR"
 
 mkdir -p $OUTPUT_DIR
 
+# ---------------------------------------------------------------------------
+# Output-folder guard: never let two jobs write the same last.pt / best.pt / metrics.csv
+# ---------------------------------------------------------------------------
+LOCK=$OUTPUT_DIR/.active_job
+if [ -f "$LOCK" ]; then
+    OTHER=$(cat "$LOCK")
+    if [ "$OTHER" != "$SLURM_JOB_ID" ] && squeue -h -j "$OTHER" 2>/dev/null | grep -q .; then
+        echo "ERROR: $OUTPUT_DIR is in use by job $OTHER (still queued/running)."
+        echo "       Submit this run with a different RUN_NAME."
+        exit 1
+    fi
+elif [ "${ALLOW_RECENT:-0}" != 1 ] && \
+     [ -n "$(find "$OUTPUT_DIR" -maxdepth 1 \( -name last.pt -o -name metrics.csv \) -mmin -90 2>/dev/null)" ]; then
+    # folder written by a job started before this lock existed (e.g. a run that is active right now)
+    echo "ERROR: $OUTPUT_DIR was updated in the last 90 min but has no lock — it may belong to an active run."
+    echo "       Submit with a different RUN_NAME, or add ALLOW_RECENT=1 if you are sure it's not running."
+    exit 1
+fi
+echo "$SLURM_JOB_ID" > "$LOCK"
+trap 'rm -f "$LOCK"' EXIT
+
 cd $REPO/training
 
 # -u: unbuffered stdout so per-epoch lines appear in logs/ as they happen.
