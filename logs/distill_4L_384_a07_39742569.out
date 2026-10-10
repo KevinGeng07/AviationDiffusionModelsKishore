@@ -1,0 +1,20 @@
+Python: /global/home/users/kevingeng/.conda/envs/adsb/bin/python
+torch 2.14.1+cu130 | netCDF4 1.7.4
+CUDA available: True
+Device: NVIDIA GeForce RTX 2080 Ti
+Run: distill_4L_384_a07 | student: /global/scratch/users/kevingeng/aviation-bayen/AviationDiffusionModelsKishore/configs/students/swi_dit_4L_384.json | alpha=0.7 | epochs=100 | batch=256 | seed=42
+Output: /global/scratch/users/kevingeng/aviation-bayen/AviationDiffusionModelsKishore/training/checkpoints/distill_4L_384_a07
+Training on cuda — CFM + SWI_DiT distillation (swi_dit_6L_teacher → swi_dit_4L_384_student, alpha=0.7, seed=42)
+Batches per epoch: 4,475 train, 499 val (batch_size=256, num_workers=2)
+Teacher: /global/scratch/users/kevingeng/aviation-bayen/AviationDiffusionModelsKishore/training/checkpoints/swi_dit/best_swi_dit.pt (epoch=84, ckpt val_fde=824.5062353116024) | {'obs_len': 43, 'fut_len': 43, 'in_dim': 6, 'd_model': 256, 'n_heads': 8, 'n_layers': 6, 'dropout': 0.1, 'ff_expansion': 3} | 7,249,158 params
+Student: {'obs_len': 43, 'fut_len': 43, 'in_dim': 6, 'd_model': 384, 'n_heads': 8, 'n_layers': 4, 'dropout': 0.1, 'ff_expansion': 3} | 11,260,806 params
+Teacher val minFDE (this split): 820.8m
+  epoch 001 | batch 500/4,475 (11.2%) | loss 0.5919 (gt 0.9473, kd 0.8614) | 5.2 it/s | elapsed 1.6 min | epoch ETA 12.8 min
+  epoch 001 | batch 1,000/4,475 (22.3%) | loss 0.7319 (gt 0.6001, kd 0.5147) | 5.2 it/s | elapsed 3.2 min | epoch ETA 11.2 min
+  epoch 001 | batch 1,500/4,475 (33.5%) | loss 0.8049 (gt 0.4673, kd 0.3821) | 5.2 it/s | elapsed 4.8 min | epoch ETA 9.5 min
+  epoch 001 | batch 2,000/4,475 (44.7%) | loss 0.8470 (gt 0.3945, kd 0.3095) | 5.2 it/s | elapsed 6.4 min | epoch ETA 7.9 min
+  epoch 001 | batch 2,500/4,475 (55.9%) | loss 0.8732 (gt 0.3479, kd 0.2630) | 5.2 it/s | elapsed 8.0 min | epoch ETA 6.3 min
+  epoch 001 | batch 3,000/4,475 (67.0%) | loss 0.8914 (gt 0.3150, kd 0.2302) | 5.2 it/s | elapsed 9.6 min | epoch ETA 4.7 min
+  epoch 001 | batch 3,500/4,475 (78.2%) | loss 0.9051 (gt 0.2904, kd 0.2057) | 5.2 it/s | elapsed 11.2 min | epoch ETA 3.1 min
+  epoch 001 | batch 4,000/4,475 (89.4%) | loss 0.9156 (gt 0.2713, kd 0.1866) | 5.2 it/s | elapsed 12.8 min | epoch ETA 1.5 min
+Job finished at Thu Oct  8 14:25:29 PDT 2026 with exit code 1

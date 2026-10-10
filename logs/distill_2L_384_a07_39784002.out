@@ -1,0 +1,12 @@
+Python: /global/home/users/kevingeng/.conda/envs/adsb/bin/python
+torch 2.14.1+cu130 | netCDF4 1.7.4
+CUDA available: True
+Device: NVIDIA GeForce RTX 2080 Ti
+Run: distill_2L_384_a07 | student: /global/scratch/users/kevingeng/aviation-bayen/AviationDiffusionModelsKishore/configs/students/swi_dit_2L_384.json | alpha=0.7 | epochs=100 | batch=256 | seed=42
+Output: /global/scratch/users/kevingeng/aviation-bayen/AviationDiffusionModelsKishore/training/checkpoints/distill_2L_384_a07
+Training on cuda — CFM + SWI_DiT distillation (swi_dit_6L_teacher → swi_dit_2L_384_student, alpha=0.7, seed=42)
+Batches per epoch: 4,475 train, 499 val (batch_size=256, num_workers=2)
+Teacher: /global/scratch/users/kevingeng/aviation-bayen/AviationDiffusionModelsKishore/training/checkpoints/swi_dit/best_swi_dit.pt (epoch=84, ckpt val_fde=824.5062353116024) | {'obs_len': 43, 'fut_len': 43, 'in_dim': 6, 'd_model': 256, 'n_heads': 8, 'n_layers': 6, 'dropout': 0.1, 'ff_expansion': 3} | 7,249,158 params
+Student: {'obs_len': 43, 'fut_len': 43, 'in_dim': 6, 'd_model': 384, 'n_heads': 8, 'n_layers': 2, 'dropout': 0.1, 'ff_expansion': 3} | 6,241,158 params
+Teacher val minFDE (this split): 820.8m
+  epoch 001 | batch 500/4,475 (11.2%) | loss 0.6351 (gt 1.1023, kd 1.0168) | 8.2 it/s | elapsed 1.0 min | epoch ETA 8.0 min

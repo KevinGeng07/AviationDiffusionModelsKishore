@@ -1,0 +1,43 @@
+[W1008 14:09:25.107994908 CUDACachingAllocator.cpp:3934] memory allocation failed with OOM on device 0 while trying to allocate 2030043136 bytes (free: 223412224, total: 11346575360).
+[W1008 14:09:25.365686306 CUDACachingAllocator.cpp:3934] memory allocation failed with OOM on device 0 while trying to allocate 2030043136 bytes (free: 269549568, total: 11346575360).
+[W1008 14:09:25.633389991 CUDACachingAllocator.cpp:3934] memory allocation failed with OOM on device 0 while trying to allocate 2030043136 bytes (free: 946929664, total: 11346575360).
+Traceback (most recent call last):
+  File "/global/scratch/users/kevingeng/aviation-bayen/AviationDiffusionModelsKishore/training/train_cfm_swi_dit_distill_savio.py", line 576, in <module>
+    train(
+  File "/global/scratch/users/kevingeng/aviation-bayen/AviationDiffusionModelsKishore/training/train_cfm_swi_dit_distill_savio.py", line 479, in train
+    kl_end, kl_path = validate_kl(
+                      ^^^^^^^^^^^^
+  File "/global/scratch/users/kevingeng/aviation-bayen/AviationDiffusionModelsKishore/training/train_cfm_swi_dit_distill_savio.py", line 273, in validate_kl
+    s_xy = euler_sample(student, obs, t_rel, n_samples=n_samples,
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/global/scratch/users/kevingeng/aviation-bayen/AviationDiffusionModelsKishore/models/cfm.py", line 88, in euler_sample
+    v_pred = model(obs_rep, x, t_tensor, trel_rep)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/global/home/users/kevingeng/.conda/envs/adsb/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1783, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/global/home/users/kevingeng/.conda/envs/adsb/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1794, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/global/scratch/users/kevingeng/aviation-bayen/AviationDiffusionModelsKishore/models/SWI_DiT.py", line 217, in forward
+    tokens = block(tokens, cond, mask=self.attn_mask)                  # hint: self.attn_mask
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/global/home/users/kevingeng/.conda/envs/adsb/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1783, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/global/home/users/kevingeng/.conda/envs/adsb/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1794, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/global/scratch/users/kevingeng/aviation-bayen/AviationDiffusionModelsKishore/models/SWI_DiT.py", line 109, in forward
+    x = x + self.ff(h)                     # hint: residual connection
+            ^^^^^^^^^^
+  File "/global/home/users/kevingeng/.conda/envs/adsb/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1783, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/global/home/users/kevingeng/.conda/envs/adsb/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1794, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/global/scratch/users/kevingeng/aviation-bayen/AviationDiffusionModelsKishore/models/SWI_DiT.py", line 63, in forward
+    return self.down(gate * up)
+                     ~~~~~^~~~
+torch.OutOfMemoryError: CUDA out of memory. Tried to allocate 1.89 GiB. GPU 0 has a total capacity of 10.57 GiB of which 903.06 MiB is free. Including non-PyTorch memory, this process has 9.68 GiB memory in use. Of the allocated memory 7.28 GiB is allocated by PyTorch, and 2.21 GiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://docs.pytorch.org/docs/stable/notes/cuda.html#optimizing-memory-usage-with-pytorch-cuda-alloc-conf)

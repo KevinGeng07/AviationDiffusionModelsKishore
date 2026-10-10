@@ -1,0 +1,14 @@
+{
+  "name": "swi_dit_6L_teacher",
+  "checkpoint": "checkpoints/swi_dit/best_swi_dit.pt",
+  "model": {
+    "obs_len": 43,
+    "fut_len": 43,
+    "in_dim": 6,
+    "d_model": 256,
+    "n_heads": 8,
+    "n_layers": 6,
+    "dropout": 0.1,
+    "ff_expansion": 3
+  }
+}
