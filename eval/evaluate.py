@@ -43,7 +43,6 @@ FOLDERS = [
     "finished_ckpt/6_2_384_SWiDiT",
     "finished_ckpt/6_4_128_SWiDiT",
     "finished_ckpt/6_4_256_SWiDiT",
-    "finished_ckpt/6_5_SWiDiT",
 ]
 
 
@@ -62,8 +61,6 @@ def load_model(folder, ckpt_name, device):
     cfg_path = ckpt_path.parent / "student_config.json"
     if cfg_path.exists():
         cfg = json.loads(cfg_path.read_text())
-    elif "student_config" in ckpt:
-        cfg = ckpt["student_config"]
     else:
         sys.exit(f"No student_config.json next to {ckpt_path} and none stored in the checkpoint")
 
