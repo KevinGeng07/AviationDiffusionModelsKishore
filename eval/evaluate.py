@@ -110,7 +110,8 @@ def evaluate(model, test_loader, feat_std, device, n_samples, n_steps, max_batch
     return {k: v / n_windows for k, v in totals.items()}, n_windows
 
 
-if __name__ == "__main__":
+def main(device=None):
+    """Parse args and evaluate every folder. device=None → CUDA if available, else CPU."""
     parser = argparse.ArgumentParser(description="Test-set ADE/FDE for finished checkpoints")
     parser.add_argument("folders", nargs="*", help="run folders (default: FOLDERS in this file)")
     parser.add_argument("--nc_path", default=str(ROOT / "Data" / "trajectories_adsblol_seq86_stage2.nc"))
@@ -120,6 +121,7 @@ if __name__ == "__main__":
     parser.add_argument("--batch_size", type=int, default=256)
     parser.add_argument("--max_batches", type=int, default=None, help="limit for a quick check")
     parser.add_argument("--num_workers", type=int, default=2)
+    parser.add_argument("--out", default=None, help="also save the results to this JSON file")
     args = parser.parse_args()
 
     folders = args.folders or FOLDERS
@@ -128,7 +130,9 @@ if __name__ == "__main__":
     if missing:
         sys.exit("Folder(s) not found: " + ", ".join(missing))
 
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    if device is None:
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    print(f"Device: {device}")
     ds = nc.Dataset(args.nc_path, "r")
     feat_std = np.array(ds.feature_std)
     ds.close()
@@ -157,3 +161,14 @@ if __name__ == "__main__":
     print("model".ljust(width) + "".join(f"{m:>10}" for m in names))
     for model_name, results in all_results.items():
         print(model_name.ljust(width) + "".join(f"{results[m]:10.1f}" for m in names))
+
+    if args.out:
+        settings = {k: getattr(args, k) for k in ("ckpt", "n_samples", "n_steps", "max_batches", "nc_path")}
+        payload = {"settings": settings, "n_windows": n, "results_m": all_results}
+        Path(args.out).parent.mkdir(parents=True, exist_ok=True)
+        Path(args.out).write_text(json.dumps(payload, indent=2))
+        print(f"\nSaved results to {args.out}")
+
+
+if __name__ == "__main__":
+    main()
