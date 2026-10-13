@@ -51,7 +51,7 @@ def forward_cfm(x_0, t):
     return x_t, noise, v_tgt
 
 
-def euler_sample(model, obs, t_rel, n_samples=20, n_steps=20, device="cuda"):
+def euler_sample(model, obs, t_rel, n_samples=20, n_steps=20, device="cuda", chunk=1024):
     """
     CFM inference — simple Euler ODE integration from noise to data.
     Much simpler than DDIM: just follow the velocity field step by step.
@@ -60,6 +60,7 @@ def euler_sample(model, obs, t_rel, n_samples=20, n_steps=20, device="cuda"):
     t_rel:     (B, 86)    normalized relative timestamps
     n_samples: how many different futures to sample
     n_steps:   how many Euler steps (20 is enough for CFM)
+    chunk:     max sequences per model call (limits GPU memory)
 
     Returns: (n_samples, B, 43, 6) predicted futures
     """
@@ -85,7 +86,13 @@ def euler_sample(model, obs, t_rel, n_samples=20, n_steps=20, device="cuda"):
             # Predict velocity field at current position and time
             # NOTE: CFM model takes t directly as float in (0,1)
             # not t/T like DDIM — t is already in (0,1)
-            v_pred = model(obs_rep, x, t_tensor, trel_rep)
+            # Run the model in chunks of `chunk` sequences: all n_samples * B at once
+            # (e.g. 20 * 256 = 5120) runs out of GPU memory for the larger models.
+            # The noise is already drawn above, so chunking does not change the result.
+            v_pred = torch.cat([
+                model(obs_rep[i:i + chunk], x[i:i + chunk], t_tensor[i:i + chunk], trel_rep[i:i + chunk])
+                for i in range(0, n_samples * B, chunk)
+            ])
             # hint: (obs_rep, x, t_tensor, trel_rep)
 
             # Euler step: move in direction of predicted velocity
