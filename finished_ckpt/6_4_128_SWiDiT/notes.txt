@@ -1,2 +1,0 @@
-No loss norm.
-alpha = 0.5

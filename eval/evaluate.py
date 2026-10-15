@@ -7,7 +7,9 @@ Usage (from the repo root):
     python eval/evaluate.py --n_samples 20 --max_batches 10
 
 Each folder can be the run folder itself or any parent of it — the script finds
-best.pt (or --ckpt last.pt) and student_config.json inside it.
+best.pt (or --ckpt last.pt) and student_config.json inside it. A checkpoint that was
+split to fit GitHub's file limit (best_0.pt, best_1.pt, ... or best.pt.part_aa, ...)
+is joined in memory automatically.
 
 For every test window the model samples K possible futures (K = --n_samples).
 Errors are distances in metres between predicted and true (x, y) positions:
@@ -20,7 +22,9 @@ Errors are distances in metres between predicted and true (x, y) positions:
 So you get minADE, minFDE, avgADE, avgFDE, each averaged over all test windows.
 """
 import argparse
+import io
 import json
+import re
 import sys
 from pathlib import Path
 
@@ -43,6 +47,7 @@ FOLDERS = [
     "finished_ckpt/6_2_384_SWiDiT",
     "finished_ckpt/6_4_128_SWiDiT",
     "finished_ckpt/6_4_256_SWiDiT",
+    "finished_ckpt/6_4_384_SWiDiT",
 ]
 
 
@@ -51,11 +56,46 @@ def find_file(folder, name):
     return matches[0] if matches else None
 
 
-def load_model(folder, ckpt_name, device):
+def find_pieces(folder, ckpt_name):
+    """Byte pieces of a checkpoint that was too big for GitHub, in join order:
+    best_0.pt, best_1.pt, ...   (split -d, renamed to .pt)
+    best.pt.part_aa, _ab, ...   (split's default names)
+    Returns [] if there are none."""
+    stem = Path(ckpt_name).stem
+    numbered = [p for p in Path(folder).rglob(f"{stem}_*.pt")
+                if re.fullmatch(rf"{re.escape(stem)}_\d+\.pt", p.name)]
+    if numbered:
+        return sorted(numbered, key=lambda p: (p.parent, int(p.stem.rsplit("_", 1)[1])))
+    return sorted(Path(folder).rglob(f"{ckpt_name}.part_*"))
+
+
+def load_checkpoint(folder, ckpt_name, device):
+    """Load ckpt_name from folder; if only split pieces exist, join them in memory first
+    (nothing is written to disk). Returns (checkpoint dict, path of the checkpoint)."""
     ckpt_path = find_file(folder, ckpt_name)
-    if ckpt_path is None:
-        sys.exit(f"No {ckpt_name} found under {folder}")
-    ckpt = torch.load(ckpt_path, map_location=device, weights_only=False)
+    if ckpt_path is not None:
+        return torch.load(ckpt_path, map_location=device, weights_only=False), ckpt_path
+
+    pieces = find_pieces(folder, ckpt_name)
+    if pieces:
+        if len({p.parent for p in pieces}) > 1:
+            sys.exit(f"Pieces of {ckpt_name} found in more than one folder under {folder}: "
+                     + ", ".join(str(p) for p in pieces))
+        print(f"Joining {len(pieces)} pieces: {', '.join(p.name for p in pieces)}")
+        data = b"".join(p.read_bytes() for p in pieces)
+        ckpt_path = pieces[0].parent / ckpt_name
+        return torch.load(io.BytesIO(data), map_location=device, weights_only=False), ckpt_path
+
+    # content split by training/split_checkpoint.py: the weights half is all eval needs
+    weights = find_file(folder, f"{Path(ckpt_name).stem}_weights.pt")
+    if weights is not None:
+        return torch.load(weights, map_location=device, weights_only=False), weights
+
+    sys.exit(f"No {ckpt_name} (or split pieces of it) found under {folder}")
+
+
+def load_model(folder, ckpt_name, device):
+    ckpt, ckpt_path = load_checkpoint(folder, ckpt_name, device)
 
     # model size: student_config.json next to the checkpoint, else the copy saved inside it
     cfg_path = ckpt_path.parent / "student_config.json"

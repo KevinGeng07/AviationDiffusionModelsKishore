@@ -51,7 +51,7 @@ def forward_cfm(x_0, t):
     return x_t, noise, v_tgt
 
 
-def euler_sample(model, obs, t_rel, n_samples=20, n_steps=20, device="cuda", chunk=1024):
+def euler_sample(model, obs, t_rel, n_samples=20, n_steps=20, device="cuda", chunk=256):
     """
     CFM inference — simple Euler ODE integration from noise to data.
     Much simpler than DDIM: just follow the velocity field step by step.
