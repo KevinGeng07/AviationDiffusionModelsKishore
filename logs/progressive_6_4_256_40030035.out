@@ -1,0 +1,475 @@
+Python: /global/home/users/kevingeng/.conda/envs/adsb/bin/python
+torch 2.14.1+cu130 | netCDF4 1.7.4
+CUDA available: True
+Device: NVIDIA GeForce RTX 2080 Ti
+Run: progressive_6_4_256 | base: 6_4_256 | lr=5e-5 (floor ×0.2) | epochs/round=10 | steps 32 → 1 | batch=256 | seed=42
+Output: /global/scratch/users/kevingeng/aviation-bayen/AviationDiffusionModelsKishore/training/checkpoints/progressive_6_4_256
+Progressive distillation on cuda → /global/scratch/users/kevingeng/aviation-bayen/AviationDiffusionModelsKishore/training/checkpoints/progressive_6_4_256
+Base (student init): Loaded finished_ckpt/6_4_256_SWiDiT/swi_dit_distill_4L/best.pt (epoch 94, val_fde 897.6893008128645) | {'obs_len': 43, 'fut_len': 43, 'in_dim': 6, 'd_model': 256, 'n_heads': 8, 'n_layers': 4, 'dropout': 0.1, 'ff_expansion': 3} | 5,016,838 params
+Round-1 teacher: the base model
+
+=== Round: 32 → 16 steps (/global/scratch/users/kevingeng/aviation-bayen/AviationDiffusionModelsKishore/training/checkpoints/progressive_6_4_256/steps_16) ===
+  teacher @ 32 steps: 897.3m | student init @ 16 steps (no distillation): 897.5m
+    epoch 001 | batch 500/4,475 | loss 0.00175 | 6.8 it/s
+    epoch 001 | batch 1,000/4,475 | loss 0.00179 | 6.8 it/s
+    epoch 001 | batch 1,500/4,475 | loss 0.00172 | 6.8 it/s
+    epoch 001 | batch 2,000/4,475 | loss 0.00176 | 6.8 it/s
+    epoch 001 | batch 2,500/4,475 | loss 0.00177 | 6.8 it/s
+    epoch 001 | batch 3,000/4,475 | loss 0.00171 | 6.9 it/s
+    epoch 001 | batch 3,500/4,475 | loss 0.00169 | 6.9 it/s
+    epoch 001 | batch 4,000/4,475 | loss 0.00168 | 6.9 it/s
+  [16 steps] epoch 001 | train 0.001685 | val 0.000307 | minFDE 914.9m (teacher@32 897.3m, init 897.5m)  ✓ best
+    epoch 002 | batch 500/4,475 | loss 0.00158 | 6.8 it/s
+    epoch 002 | batch 1,000/4,475 | loss 0.00149 | 6.8 it/s
+    epoch 002 | batch 1,500/4,475 | loss 0.00145 | 6.8 it/s
+    epoch 002 | batch 2,000/4,475 | loss 0.00145 | 6.8 it/s
+    epoch 002 | batch 2,500/4,475 | loss 0.00143 | 6.8 it/s
+    epoch 002 | batch 3,000/4,475 | loss 0.00149 | 6.8 it/s
+    epoch 002 | batch 3,500/4,475 | loss 0.00147 | 6.8 it/s
+    epoch 002 | batch 4,000/4,475 | loss 0.00145 | 6.8 it/s
+  [16 steps] epoch 002 | train 0.001446 | val 0.000274 | minFDE 911.3m (teacher@32 897.3m, init 897.5m)  ✓ best
+    epoch 003 | batch 500/4,475 | loss 0.00142 | 6.8 it/s
+    epoch 003 | batch 1,000/4,475 | loss 0.00137 | 6.8 it/s
+    epoch 003 | batch 1,500/4,475 | loss 0.00144 | 6.8 it/s
+    epoch 003 | batch 2,000/4,475 | loss 0.00144 | 6.8 it/s
+    epoch 003 | batch 2,500/4,475 | loss 0.00156 | 6.8 it/s
+    epoch 003 | batch 3,000/4,475 | loss 0.00151 | 6.9 it/s
+    epoch 003 | batch 3,500/4,475 | loss 0.00149 | 6.9 it/s
+    epoch 003 | batch 4,000/4,475 | loss 0.00146 | 6.9 it/s
+  [16 steps] epoch 003 | train 0.001470 | val 0.000284 | minFDE 912.9m (teacher@32 897.3m, init 897.5m)
+    epoch 004 | batch 500/4,475 | loss 0.00152 | 6.8 it/s
+    epoch 004 | batch 1,000/4,475 | loss 0.00144 | 6.8 it/s
+    epoch 004 | batch 1,500/4,475 | loss 0.00140 | 6.9 it/s
+    epoch 004 | batch 2,000/4,475 | loss 0.00136 | 6.9 it/s
+    epoch 004 | batch 2,500/4,475 | loss 0.00134 | 6.9 it/s
+    epoch 004 | batch 3,000/4,475 | loss 0.00133 | 6.9 it/s
+    epoch 004 | batch 3,500/4,475 | loss 0.00131 | 6.9 it/s
+    epoch 004 | batch 4,000/4,475 | loss 0.00129 | 6.9 it/s
+  [16 steps] epoch 004 | train 0.001282 | val 0.000251 | minFDE 909.5m (teacher@32 897.3m, init 897.5m)  ✓ best
+    epoch 005 | batch 500/4,475 | loss 0.00112 | 6.8 it/s
+    epoch 005 | batch 1,000/4,475 | loss 0.00115 | 6.8 it/s
+    epoch 005 | batch 1,500/4,475 | loss 0.00112 | 6.8 it/s
+    epoch 005 | batch 2,000/4,475 | loss 0.00111 | 6.8 it/s
+    epoch 005 | batch 2,500/4,475 | loss 0.00107 | 6.8 it/s
+    epoch 005 | batch 3,000/4,475 | loss 0.00105 | 6.8 it/s
+    epoch 005 | batch 3,500/4,475 | loss 0.00105 | 6.8 it/s
+    epoch 005 | batch 4,000/4,475 | loss 0.00108 | 6.9 it/s
+  [16 steps] epoch 005 | train 0.001119 | val 0.000235 | minFDE 907.7m (teacher@32 897.3m, init 897.5m)  ✓ best
+    epoch 006 | batch 500/4,475 | loss 0.00099 | 6.8 it/s
+    epoch 006 | batch 1,000/4,475 | loss 0.00095 | 6.8 it/s
+    epoch 006 | batch 1,500/4,475 | loss 0.00093 | 6.8 it/s
+    epoch 006 | batch 2,000/4,475 | loss 0.00093 | 6.8 it/s
+    epoch 006 | batch 2,500/4,475 | loss 0.00094 | 6.9 it/s
+    epoch 006 | batch 3,000/4,475 | loss 0.00094 | 6.8 it/s
+    epoch 006 | batch 3,500/4,475 | loss 0.00094 | 6.8 it/s
+    epoch 006 | batch 4,000/4,475 | loss 0.00094 | 6.8 it/s
+  [16 steps] epoch 006 | train 0.000939 | val 0.000200 | minFDE 906.2m (teacher@32 897.3m, init 897.5m)  ✓ best
+    epoch 007 | batch 500/4,475 | loss 0.00083 | 6.7 it/s
+    epoch 007 | batch 1,000/4,475 | loss 0.00083 | 6.7 it/s
+    epoch 007 | batch 1,500/4,475 | loss 0.00082 | 6.8 it/s
+    epoch 007 | batch 2,000/4,475 | loss 0.00083 | 6.8 it/s
+    epoch 007 | batch 2,500/4,475 | loss 0.00082 | 6.8 it/s
+    epoch 007 | batch 3,000/4,475 | loss 0.00082 | 6.8 it/s
+    epoch 007 | batch 3,500/4,475 | loss 0.00082 | 6.8 it/s
+    epoch 007 | batch 4,000/4,475 | loss 0.00082 | 6.8 it/s
+  [16 steps] epoch 007 | train 0.000824 | val 0.000178 | minFDE 906.5m (teacher@32 897.3m, init 897.5m)
+    epoch 008 | batch 500/4,475 | loss 0.00075 | 6.7 it/s
+    epoch 008 | batch 1,000/4,475 | loss 0.00078 | 6.8 it/s
+    epoch 008 | batch 1,500/4,475 | loss 0.00077 | 6.8 it/s
+    epoch 008 | batch 2,000/4,475 | loss 0.00076 | 6.8 it/s
+    epoch 008 | batch 2,500/4,475 | loss 0.00075 | 6.8 it/s
+    epoch 008 | batch 3,000/4,475 | loss 0.00075 | 6.8 it/s
+    epoch 008 | batch 3,500/4,475 | loss 0.00074 | 6.8 it/s
+    epoch 008 | batch 4,000/4,475 | loss 0.00075 | 6.8 it/s
+  [16 steps] epoch 008 | train 0.000749 | val 0.000167 | minFDE 904.6m (teacher@32 897.3m, init 897.5m)  ✓ best
+    epoch 009 | batch 500/4,475 | loss 0.00071 | 6.8 it/s
+    epoch 009 | batch 1,000/4,475 | loss 0.00070 | 6.8 it/s
+    epoch 009 | batch 1,500/4,475 | loss 0.00070 | 6.8 it/s
+    epoch 009 | batch 2,000/4,475 | loss 0.00070 | 6.8 it/s
+    epoch 009 | batch 2,500/4,475 | loss 0.00070 | 6.9 it/s
+    epoch 009 | batch 3,000/4,475 | loss 0.00071 | 6.9 it/s
+    epoch 009 | batch 3,500/4,475 | loss 0.00071 | 6.9 it/s
+    epoch 009 | batch 4,000/4,475 | loss 0.00071 | 6.9 it/s
+  [16 steps] epoch 009 | train 0.000705 | val 0.000158 | minFDE 904.6m (teacher@32 897.3m, init 897.5m)  ✓ best
+    epoch 010 | batch 500/4,475 | loss 0.00071 | 6.8 it/s
+    epoch 010 | batch 1,000/4,475 | loss 0.00070 | 6.8 it/s
+    epoch 010 | batch 1,500/4,475 | loss 0.00069 | 6.8 it/s
+    epoch 010 | batch 2,000/4,475 | loss 0.00069 | 6.8 it/s
+    epoch 010 | batch 2,500/4,475 | loss 0.00069 | 6.8 it/s
+    epoch 010 | batch 3,000/4,475 | loss 0.00069 | 6.8 it/s
+    epoch 010 | batch 3,500/4,475 | loss 0.00069 | 6.8 it/s
+    epoch 010 | batch 4,000/4,475 | loss 0.00068 | 6.8 it/s
+  [16 steps] epoch 010 | train 0.000683 | val 0.000155 | minFDE 904.5m (teacher@32 897.3m, init 897.5m)  ✓ best
+
+=== Round: 16 → 8 steps (/global/scratch/users/kevingeng/aviation-bayen/AviationDiffusionModelsKishore/training/checkpoints/progressive_6_4_256/steps_08) ===
+  teacher @ 16 steps: 904.5m | student init @ 8 steps (no distillation): 896.9m
+    epoch 001 | batch 500/4,475 | loss 0.00130 | 6.7 it/s
+    epoch 001 | batch 1,000/4,475 | loss 0.00129 | 6.8 it/s
+    epoch 001 | batch 1,500/4,475 | loss 0.00127 | 6.8 it/s
+    epoch 001 | batch 2,000/4,475 | loss 0.00127 | 6.8 it/s
+    epoch 001 | batch 2,500/4,475 | loss 0.00126 | 6.8 it/s
+    epoch 001 | batch 3,000/4,475 | loss 0.00126 | 6.8 it/s
+    epoch 001 | batch 3,500/4,475 | loss 0.00125 | 6.8 it/s
+    epoch 001 | batch 4,000/4,475 | loss 0.00125 | 6.8 it/s
+  [8 steps] epoch 001 | train 0.001242 | val 0.000213 | minFDE 916.3m (teacher@16 904.5m, init 896.9m)  ✓ best
+    epoch 002 | batch 500/4,475 | loss 0.00131 | 6.7 it/s
+    epoch 002 | batch 1,000/4,475 | loss 0.00118 | 6.8 it/s
+    epoch 002 | batch 1,500/4,475 | loss 0.00118 | 6.8 it/s
+    epoch 002 | batch 2,000/4,475 | loss 0.00115 | 6.8 it/s
+    epoch 002 | batch 2,500/4,475 | loss 0.00117 | 6.8 it/s
+    epoch 002 | batch 3,000/4,475 | loss 0.00117 | 6.8 it/s
+    epoch 002 | batch 3,500/4,475 | loss 0.00119 | 6.8 it/s
+    epoch 002 | batch 4,000/4,475 | loss 0.00120 | 6.8 it/s
+  [8 steps] epoch 002 | train 0.001188 | val 0.000227 | minFDE 918.7m (teacher@16 904.5m, init 896.9m)
+    epoch 003 | batch 500/4,475 | loss 0.00106 | 6.8 it/s
+    epoch 003 | batch 1,000/4,475 | loss 0.00105 | 6.8 it/s
+    epoch 003 | batch 1,500/4,475 | loss 0.00109 | 6.8 it/s
+    epoch 003 | batch 2,000/4,475 | loss 0.00108 | 6.8 it/s
+    epoch 003 | batch 2,500/4,475 | loss 0.00106 | 6.8 it/s
+    epoch 003 | batch 3,000/4,475 | loss 0.00108 | 6.8 it/s
+    epoch 003 | batch 3,500/4,475 | loss 0.00120 | 6.9 it/s
+    epoch 003 | batch 4,000/4,475 | loss 0.00120 | 6.9 it/s
+  [8 steps] epoch 003 | train 0.001183 | val 0.000240 | minFDE 917.3m (teacher@16 904.5m, init 896.9m)
+    epoch 004 | batch 500/4,475 | loss 0.00116 | 6.7 it/s
+    epoch 004 | batch 1,000/4,475 | loss 0.00103 | 6.8 it/s
+    epoch 004 | batch 1,500/4,475 | loss 0.00101 | 6.8 it/s
+    epoch 004 | batch 2,000/4,475 | loss 0.00099 | 6.8 it/s
+    epoch 004 | batch 2,500/4,475 | loss 0.00102 | 6.8 it/s
+    epoch 004 | batch 3,000/4,475 | loss 0.00102 | 6.8 it/s
+    epoch 004 | batch 3,500/4,475 | loss 0.00100 | 6.8 it/s
+    epoch 004 | batch 4,000/4,475 | loss 0.00098 | 6.9 it/s
+  [8 steps] epoch 004 | train 0.001018 | val 0.000204 | minFDE 915.2m (teacher@16 904.5m, init 896.9m)  ✓ best
+    epoch 005 | batch 500/4,475 | loss 0.00087 | 6.8 it/s
+    epoch 005 | batch 1,000/4,475 | loss 0.00083 | 6.8 it/s
+    epoch 005 | batch 1,500/4,475 | loss 0.00085 | 6.8 it/s
+    epoch 005 | batch 2,000/4,475 | loss 0.00084 | 6.8 it/s
+    epoch 005 | batch 2,500/4,475 | loss 0.00085 | 6.8 it/s
+    epoch 005 | batch 3,000/4,475 | loss 0.00089 | 6.8 it/s
+    epoch 005 | batch 3,500/4,475 | loss 0.00087 | 6.8 it/s
+    epoch 005 | batch 4,000/4,475 | loss 0.00088 | 6.8 it/s
+  [8 steps] epoch 005 | train 0.000867 | val 0.000168 | minFDE 915.8m (teacher@16 904.5m, init 896.9m)
+    epoch 006 | batch 500/4,475 | loss 0.00072 | 6.7 it/s
+    epoch 006 | batch 1,000/4,475 | loss 0.00073 | 6.8 it/s
+    epoch 006 | batch 1,500/4,475 | loss 0.00072 | 6.8 it/s
+    epoch 006 | batch 2,000/4,475 | loss 0.00083 | 6.8 it/s
+    epoch 006 | batch 2,500/4,475 | loss 0.00080 | 6.8 it/s
+    epoch 006 | batch 3,000/4,475 | loss 0.00079 | 6.8 it/s
+    epoch 006 | batch 3,500/4,475 | loss 0.00079 | 6.8 it/s
+    epoch 006 | batch 4,000/4,475 | loss 0.00078 | 6.8 it/s
+  [8 steps] epoch 006 | train 0.000778 | val 0.000162 | minFDE 915.4m (teacher@16 904.5m, init 896.9m)
+    epoch 007 | batch 500/4,475 | loss 0.00063 | 6.8 it/s
+    epoch 007 | batch 1,000/4,475 | loss 0.00063 | 6.8 it/s
+    epoch 007 | batch 1,500/4,475 | loss 0.00063 | 6.8 it/s
+    epoch 007 | batch 2,000/4,475 | loss 0.00064 | 6.8 it/s
+    epoch 007 | batch 2,500/4,475 | loss 0.00065 | 6.8 it/s
+    epoch 007 | batch 3,000/4,475 | loss 0.00064 | 6.8 it/s
+    epoch 007 | batch 3,500/4,475 | loss 0.00064 | 6.8 it/s
+    epoch 007 | batch 4,000/4,475 | loss 0.00064 | 6.8 it/s
+  [8 steps] epoch 007 | train 0.000637 | val 0.000139 | minFDE 914.5m (teacher@16 904.5m, init 896.9m)  ✓ best
+    epoch 008 | batch 500/4,475 | loss 0.00061 | 6.8 it/s
+    epoch 008 | batch 1,000/4,475 | loss 0.00059 | 6.8 it/s
+    epoch 008 | batch 1,500/4,475 | loss 0.00059 | 6.8 it/s
+    epoch 008 | batch 2,000/4,475 | loss 0.00058 | 6.8 it/s
+    epoch 008 | batch 2,500/4,475 | loss 0.00058 | 6.8 it/s
+    epoch 008 | batch 3,000/4,475 | loss 0.00058 | 6.8 it/s
+    epoch 008 | batch 3,500/4,475 | loss 0.00058 | 6.8 it/s
+    epoch 008 | batch 4,000/4,475 | loss 0.00058 | 6.8 it/s
+  [8 steps] epoch 008 | train 0.000579 | val 0.000131 | minFDE 912.4m (teacher@16 904.5m, init 896.9m)  ✓ best
+    epoch 009 | batch 500/4,475 | loss 0.00054 | 6.7 it/s
+    epoch 009 | batch 1,000/4,475 | loss 0.00054 | 6.8 it/s
+    epoch 009 | batch 1,500/4,475 | loss 0.00054 | 6.8 it/s
+    epoch 009 | batch 2,000/4,475 | loss 0.00055 | 6.8 it/s
+    epoch 009 | batch 2,500/4,475 | loss 0.00055 | 6.8 it/s
+    epoch 009 | batch 3,000/4,475 | loss 0.00055 | 6.8 it/s
+    epoch 009 | batch 3,500/4,475 | loss 0.00055 | 6.8 it/s
+    epoch 009 | batch 4,000/4,475 | loss 0.00055 | 6.8 it/s
+  [8 steps] epoch 009 | train 0.000545 | val 0.000125 | minFDE 911.4m (teacher@16 904.5m, init 896.9m)  ✓ best
+    epoch 010 | batch 500/4,475 | loss 0.00053 | 6.7 it/s
+    epoch 010 | batch 1,000/4,475 | loss 0.00052 | 6.7 it/s
+    epoch 010 | batch 1,500/4,475 | loss 0.00052 | 6.8 it/s
+    epoch 010 | batch 2,000/4,475 | loss 0.00052 | 6.8 it/s
+    epoch 010 | batch 2,500/4,475 | loss 0.00052 | 6.8 it/s
+    epoch 010 | batch 3,000/4,475 | loss 0.00053 | 6.8 it/s
+    epoch 010 | batch 3,500/4,475 | loss 0.00053 | 6.8 it/s
+    epoch 010 | batch 4,000/4,475 | loss 0.00053 | 6.8 it/s
+  [8 steps] epoch 010 | train 0.000527 | val 0.000121 | minFDE 912.2m (teacher@16 904.5m, init 896.9m)
+
+=== Round: 8 → 4 steps (/global/scratch/users/kevingeng/aviation-bayen/AviationDiffusionModelsKishore/training/checkpoints/progressive_6_4_256/steps_04) ===
+  teacher @ 8 steps: 911.4m | student init @ 4 steps (no distillation): 904.4m
+    epoch 001 | batch 500/4,475 | loss 0.00155 | 6.7 it/s
+    epoch 001 | batch 1,000/4,475 | loss 0.00168 | 6.8 it/s
+    epoch 001 | batch 1,500/4,475 | loss 0.00159 | 6.8 it/s
+    epoch 001 | batch 2,000/4,475 | loss 0.00157 | 6.8 it/s
+    epoch 001 | batch 2,500/4,475 | loss 0.00153 | 6.8 it/s
+    epoch 001 | batch 3,000/4,475 | loss 0.00154 | 6.8 it/s
+    epoch 001 | batch 3,500/4,475 | loss 0.00154 | 6.8 it/s
+    epoch 001 | batch 4,000/4,475 | loss 0.00153 | 6.8 it/s
+  [4 steps] epoch 001 | train 0.001526 | val 0.000368 | minFDE 932.5m (teacher@8 911.4m, init 904.4m)  ✓ best
+    epoch 002 | batch 500/4,475 | loss 0.00168 | 6.8 it/s
+    epoch 002 | batch 1,000/4,475 | loss 0.00151 | 6.8 it/s
+    epoch 002 | batch 1,500/4,475 | loss 0.00149 | 6.8 it/s
+    epoch 002 | batch 2,000/4,475 | loss 0.00151 | 6.8 it/s
+    epoch 002 | batch 2,500/4,475 | loss 0.00148 | 6.8 it/s
+    epoch 002 | batch 3,000/4,475 | loss 0.00146 | 6.8 it/s
+    epoch 002 | batch 3,500/4,475 | loss 0.00147 | 6.8 it/s
+    epoch 002 | batch 4,000/4,475 | loss 0.00147 | 6.8 it/s
+  [4 steps] epoch 002 | train 0.001451 | val 0.000351 | minFDE 934.1m (teacher@8 911.4m, init 904.4m)
+    epoch 003 | batch 500/4,475 | loss 0.00151 | 6.8 it/s
+    epoch 003 | batch 1,000/4,475 | loss 0.00140 | 6.8 it/s
+    epoch 003 | batch 1,500/4,475 | loss 0.00135 | 6.8 it/s
+    epoch 003 | batch 2,000/4,475 | loss 0.00136 | 6.8 it/s
+    epoch 003 | batch 2,500/4,475 | loss 0.00135 | 6.8 it/s
+    epoch 003 | batch 3,000/4,475 | loss 0.00135 | 6.8 it/s
+    epoch 003 | batch 3,500/4,475 | loss 0.00135 | 6.8 it/s
+    epoch 003 | batch 4,000/4,475 | loss 0.00134 | 6.8 it/s
+  [4 steps] epoch 003 | train 0.001338 | val 0.000317 | minFDE 930.5m (teacher@8 911.4m, init 904.4m)  ✓ best
+    epoch 004 | batch 500/4,475 | loss 0.00107 | 6.8 it/s
+    epoch 004 | batch 1,000/4,475 | loss 0.00108 | 6.8 it/s
+    epoch 004 | batch 1,500/4,475 | loss 0.00111 | 6.8 it/s
+    epoch 004 | batch 2,000/4,475 | loss 0.00110 | 6.8 it/s
+    epoch 004 | batch 2,500/4,475 | loss 0.00112 | 6.8 it/s
+    epoch 004 | batch 3,000/4,475 | loss 0.00115 | 6.8 it/s
+    epoch 004 | batch 3,500/4,475 | loss 0.00116 | 6.8 it/s
+    epoch 004 | batch 4,000/4,475 | loss 0.00118 | 6.8 it/s
+  [4 steps] epoch 004 | train 0.001176 | val 0.000293 | minFDE 930.1m (teacher@8 911.4m, init 904.4m)  ✓ best
+    epoch 005 | batch 500/4,475 | loss 0.00096 | 6.8 it/s
+    epoch 005 | batch 1,000/4,475 | loss 0.00103 | 6.8 it/s
+    epoch 005 | batch 1,500/4,475 | loss 0.00100 | 6.8 it/s
+    epoch 005 | batch 2,000/4,475 | loss 0.00101 | 6.8 it/s
+    epoch 005 | batch 2,500/4,475 | loss 0.00099 | 6.8 it/s
+    epoch 005 | batch 3,000/4,475 | loss 0.00100 | 6.8 it/s
+    epoch 005 | batch 3,500/4,475 | loss 0.00100 | 6.8 it/s
+    epoch 005 | batch 4,000/4,475 | loss 0.00103 | 6.8 it/s
+  [4 steps] epoch 005 | train 0.001022 | val 0.000277 | minFDE 930.2m (teacher@8 911.4m, init 904.4m)
+    epoch 006 | batch 500/4,475 | loss 0.00080 | 6.8 it/s
+    epoch 006 | batch 1,000/4,475 | loss 0.00079 | 6.8 it/s
+    epoch 006 | batch 1,500/4,475 | loss 0.00088 | 6.8 it/s
+    epoch 006 | batch 2,000/4,475 | loss 0.00088 | 6.9 it/s
+    epoch 006 | batch 2,500/4,475 | loss 0.00087 | 6.9 it/s
+    epoch 006 | batch 3,000/4,475 | loss 0.00087 | 6.9 it/s
+    epoch 006 | batch 3,500/4,475 | loss 0.00087 | 6.9 it/s
+    epoch 006 | batch 4,000/4,475 | loss 0.00087 | 6.9 it/s
+  [4 steps] epoch 006 | train 0.000872 | val 0.000241 | minFDE 927.5m (teacher@8 911.4m, init 904.4m)  ✓ best
+    epoch 007 | batch 500/4,475 | loss 0.00074 | 6.7 it/s
+    epoch 007 | batch 1,000/4,475 | loss 0.00073 | 6.8 it/s
+    epoch 007 | batch 1,500/4,475 | loss 0.00074 | 6.8 it/s
+    epoch 007 | batch 2,000/4,475 | loss 0.00074 | 6.8 it/s
+    epoch 007 | batch 2,500/4,475 | loss 0.00073 | 6.8 it/s
+    epoch 007 | batch 3,000/4,475 | loss 0.00073 | 6.8 it/s
+    epoch 007 | batch 3,500/4,475 | loss 0.00074 | 6.8 it/s
+    epoch 007 | batch 4,000/4,475 | loss 0.00074 | 6.8 it/s
+  [4 steps] epoch 007 | train 0.000747 | val 0.000230 | minFDE 927.5m (teacher@8 911.4m, init 904.4m)
+    epoch 008 | batch 500/4,475 | loss 0.00071 | 6.8 it/s
+    epoch 008 | batch 1,000/4,475 | loss 0.00068 | 6.8 it/s
+    epoch 008 | batch 1,500/4,475 | loss 0.00068 | 6.8 it/s
+    epoch 008 | batch 2,000/4,475 | loss 0.00068 | 6.8 it/s
+    epoch 008 | batch 2,500/4,475 | loss 0.00067 | 6.8 it/s
+    epoch 008 | batch 3,000/4,475 | loss 0.00067 | 6.8 it/s
+    epoch 008 | batch 3,500/4,475 | loss 0.00067 | 6.8 it/s
+    epoch 008 | batch 4,000/4,475 | loss 0.00066 | 6.8 it/s
+  [4 steps] epoch 008 | train 0.000673 | val 0.000212 | minFDE 926.2m (teacher@8 911.4m, init 904.4m)  ✓ best
+    epoch 009 | batch 500/4,475 | loss 0.00062 | 6.8 it/s
+    epoch 009 | batch 1,000/4,475 | loss 0.00061 | 6.8 it/s
+    epoch 009 | batch 1,500/4,475 | loss 0.00061 | 6.8 it/s
+    epoch 009 | batch 2,000/4,475 | loss 0.00060 | 6.8 it/s
+    epoch 009 | batch 2,500/4,475 | loss 0.00060 | 6.8 it/s
+    epoch 009 | batch 3,000/4,475 | loss 0.00060 | 6.8 it/s
+    epoch 009 | batch 3,500/4,475 | loss 0.00061 | 6.8 it/s
+    epoch 009 | batch 4,000/4,475 | loss 0.00061 | 6.8 it/s
+  [4 steps] epoch 009 | train 0.000608 | val 0.000199 | minFDE 925.9m (teacher@8 911.4m, init 904.4m)  ✓ best
+    epoch 010 | batch 500/4,475 | loss 0.00058 | 6.8 it/s
+    epoch 010 | batch 1,000/4,475 | loss 0.00058 | 6.8 it/s
+    epoch 010 | batch 1,500/4,475 | loss 0.00058 | 6.8 it/s
+    epoch 010 | batch 2,000/4,475 | loss 0.00058 | 6.8 it/s
+    epoch 010 | batch 2,500/4,475 | loss 0.00058 | 6.8 it/s
+    epoch 010 | batch 3,000/4,475 | loss 0.00058 | 6.8 it/s
+    epoch 010 | batch 3,500/4,475 | loss 0.00058 | 6.8 it/s
+    epoch 010 | batch 4,000/4,475 | loss 0.00058 | 6.8 it/s
+  [4 steps] epoch 010 | train 0.000583 | val 0.000196 | minFDE 924.3m (teacher@8 911.4m, init 904.4m)  ✓ best
+
+=== Round: 4 → 2 steps (/global/scratch/users/kevingeng/aviation-bayen/AviationDiffusionModelsKishore/training/checkpoints/progressive_6_4_256/steps_02) ===
+  teacher @ 4 steps: 924.3m | student init @ 2 steps (no distillation): 943.5m
+    epoch 001 | batch 500/4,475 | loss 0.00291 | 6.8 it/s
+    epoch 001 | batch 1,000/4,475 | loss 0.00301 | 6.8 it/s
+    epoch 001 | batch 1,500/4,475 | loss 0.00289 | 6.8 it/s
+    epoch 001 | batch 2,000/4,475 | loss 0.00289 | 6.8 it/s
+    epoch 001 | batch 2,500/4,475 | loss 0.00293 | 6.8 it/s
+    epoch 001 | batch 3,000/4,475 | loss 0.00289 | 6.8 it/s
+    epoch 001 | batch 3,500/4,475 | loss 0.00286 | 6.8 it/s
+    epoch 001 | batch 4,000/4,475 | loss 0.00285 | 6.8 it/s
+  [2 steps] epoch 001 | train 0.002842 | val 0.000970 | minFDE 965.8m (teacher@4 924.3m, init 943.5m)  ✓ best
+    epoch 002 | batch 500/4,475 | loss 0.00248 | 6.7 it/s
+    epoch 002 | batch 1,000/4,475 | loss 0.00270 | 6.7 it/s
+    epoch 002 | batch 1,500/4,475 | loss 0.00265 | 6.7 it/s
+    epoch 002 | batch 2,000/4,475 | loss 0.00265 | 6.7 it/s
+    epoch 002 | batch 2,500/4,475 | loss 0.00267 | 6.8 it/s
+    epoch 002 | batch 3,000/4,475 | loss 0.00267 | 6.8 it/s
+    epoch 002 | batch 3,500/4,475 | loss 0.00267 | 6.8 it/s
+    epoch 002 | batch 4,000/4,475 | loss 0.00267 | 6.8 it/s
+  [2 steps] epoch 002 | train 0.002652 | val 0.000975 | minFDE 966.9m (teacher@4 924.3m, init 943.5m)
+    epoch 003 | batch 500/4,475 | loss 0.00249 | 6.8 it/s
+    epoch 003 | batch 1,000/4,475 | loss 0.00248 | 6.8 it/s
+    epoch 003 | batch 1,500/4,475 | loss 0.00250 | 6.8 it/s
+    epoch 003 | batch 2,000/4,475 | loss 0.00247 | 6.8 it/s
+    epoch 003 | batch 2,500/4,475 | loss 0.00243 | 6.9 it/s
+    epoch 003 | batch 3,000/4,475 | loss 0.00243 | 6.9 it/s
+    epoch 003 | batch 3,500/4,475 | loss 0.00246 | 6.9 it/s
+    epoch 003 | batch 4,000/4,475 | loss 0.00245 | 6.9 it/s
+  [2 steps] epoch 003 | train 0.002472 | val 0.000880 | minFDE 966.0m (teacher@4 924.3m, init 943.5m)
+    epoch 004 | batch 500/4,475 | loss 0.00214 | 6.8 it/s
+    epoch 004 | batch 1,000/4,475 | loss 0.00224 | 6.8 it/s
+    epoch 004 | batch 1,500/4,475 | loss 0.00224 | 6.8 it/s
+    epoch 004 | batch 2,000/4,475 | loss 0.00222 | 6.8 it/s
+    epoch 004 | batch 2,500/4,475 | loss 0.00222 | 6.8 it/s
+    epoch 004 | batch 3,000/4,475 | loss 0.00220 | 6.8 it/s
+    epoch 004 | batch 3,500/4,475 | loss 0.00219 | 6.8 it/s
+    epoch 004 | batch 4,000/4,475 | loss 0.00218 | 6.8 it/s
+  [2 steps] epoch 004 | train 0.002184 | val 0.000840 | minFDE 964.8m (teacher@4 924.3m, init 943.5m)  ✓ best
+    epoch 005 | batch 500/4,475 | loss 0.00205 | 6.7 it/s
+    epoch 005 | batch 1,000/4,475 | loss 0.00196 | 6.8 it/s
+    epoch 005 | batch 1,500/4,475 | loss 0.00192 | 6.8 it/s
+    epoch 005 | batch 2,000/4,475 | loss 0.00198 | 6.8 it/s
+    epoch 005 | batch 2,500/4,475 | loss 0.00201 | 6.8 it/s
+    epoch 005 | batch 3,000/4,475 | loss 0.00197 | 6.8 it/s
+    epoch 005 | batch 3,500/4,475 | loss 0.00197 | 6.8 it/s
+    epoch 005 | batch 4,000/4,475 | loss 0.00196 | 6.8 it/s
+  [2 steps] epoch 005 | train 0.001963 | val 0.000767 | minFDE 964.0m (teacher@4 924.3m, init 943.5m)  ✓ best
+    epoch 006 | batch 500/4,475 | loss 0.00156 | 6.7 it/s
+    epoch 006 | batch 1,000/4,475 | loss 0.00157 | 6.7 it/s
+    epoch 006 | batch 1,500/4,475 | loss 0.00162 | 6.7 it/s
+    epoch 006 | batch 2,000/4,475 | loss 0.00159 | 6.7 it/s
+    epoch 006 | batch 2,500/4,475 | loss 0.00163 | 6.7 it/s
+    epoch 006 | batch 3,000/4,475 | loss 0.00163 | 6.7 it/s
+    epoch 006 | batch 3,500/4,475 | loss 0.00162 | 6.7 it/s
+    epoch 006 | batch 4,000/4,475 | loss 0.00163 | 6.7 it/s
+  [2 steps] epoch 006 | train 0.001645 | val 0.000689 | minFDE 958.5m (teacher@4 924.3m, init 943.5m)  ✓ best
+    epoch 007 | batch 500/4,475 | loss 0.00141 | 6.7 it/s
+    epoch 007 | batch 1,000/4,475 | loss 0.00137 | 6.8 it/s
+    epoch 007 | batch 1,500/4,475 | loss 0.00140 | 6.8 it/s
+    epoch 007 | batch 2,000/4,475 | loss 0.00140 | 6.8 it/s
+    epoch 007 | batch 2,500/4,475 | loss 0.00140 | 6.8 it/s
+    epoch 007 | batch 3,000/4,475 | loss 0.00141 | 6.8 it/s
+    epoch 007 | batch 3,500/4,475 | loss 0.00142 | 6.8 it/s
+    epoch 007 | batch 4,000/4,475 | loss 0.00142 | 6.7 it/s
+  [2 steps] epoch 007 | train 0.001423 | val 0.000639 | minFDE 959.3m (teacher@4 924.3m, init 943.5m)
+    epoch 008 | batch 500/4,475 | loss 0.00122 | 6.7 it/s
+    epoch 008 | batch 1,000/4,475 | loss 0.00119 | 6.7 it/s
+    epoch 008 | batch 1,500/4,475 | loss 0.00121 | 6.7 it/s
+    epoch 008 | batch 2,000/4,475 | loss 0.00122 | 6.7 it/s
+    epoch 008 | batch 2,500/4,475 | loss 0.00123 | 6.7 it/s
+    epoch 008 | batch 3,000/4,475 | loss 0.00123 | 6.7 it/s
+    epoch 008 | batch 3,500/4,475 | loss 0.00123 | 6.7 it/s
+    epoch 008 | batch 4,000/4,475 | loss 0.00124 | 6.7 it/s
+  [2 steps] epoch 008 | train 0.001230 | val 0.000598 | minFDE 956.6m (teacher@4 924.3m, init 943.5m)  ✓ best
+    epoch 009 | batch 500/4,475 | loss 0.00113 | 6.7 it/s
+    epoch 009 | batch 1,000/4,475 | loss 0.00113 | 6.7 it/s
+    epoch 009 | batch 1,500/4,475 | loss 0.00114 | 6.7 it/s
+    epoch 009 | batch 2,000/4,475 | loss 0.00112 | 6.8 it/s
+    epoch 009 | batch 2,500/4,475 | loss 0.00111 | 6.8 it/s
+    epoch 009 | batch 3,000/4,475 | loss 0.00111 | 6.7 it/s
+    epoch 009 | batch 3,500/4,475 | loss 0.00112 | 6.7 it/s
+    epoch 009 | batch 4,000/4,475 | loss 0.00111 | 6.8 it/s
+  [2 steps] epoch 009 | train 0.001113 | val 0.000566 | minFDE 954.9m (teacher@4 924.3m, init 943.5m)  ✓ best
+    epoch 010 | batch 500/4,475 | loss 0.00107 | 6.7 it/s
+    epoch 010 | batch 1,000/4,475 | loss 0.00106 | 6.7 it/s
+    epoch 010 | batch 1,500/4,475 | loss 0.00107 | 6.8 it/s
+    epoch 010 | batch 2,000/4,475 | loss 0.00107 | 6.8 it/s
+    epoch 010 | batch 2,500/4,475 | loss 0.00107 | 6.7 it/s
+    epoch 010 | batch 3,000/4,475 | loss 0.00107 | 6.7 it/s
+    epoch 010 | batch 3,500/4,475 | loss 0.00108 | 6.8 it/s
+    epoch 010 | batch 4,000/4,475 | loss 0.00107 | 6.8 it/s
+  [2 steps] epoch 010 | train 0.001072 | val 0.000544 | minFDE 954.6m (teacher@4 924.3m, init 943.5m)  ✓ best
+
+=== Round: 2 → 1 steps (/global/scratch/users/kevingeng/aviation-bayen/AviationDiffusionModelsKishore/training/checkpoints/progressive_6_4_256/steps_01) ===
+  teacher @ 2 steps: 954.6m | student init @ 1 steps (no distillation): 1151.7m
+    epoch 001 | batch 500/4,475 | loss 0.00580 | 6.7 it/s
+    epoch 001 | batch 1,000/4,475 | loss 0.00559 | 6.8 it/s
+    epoch 001 | batch 1,500/4,475 | loss 0.00554 | 6.8 it/s
+    epoch 001 | batch 2,000/4,475 | loss 0.00545 | 6.8 it/s
+    epoch 001 | batch 2,500/4,475 | loss 0.00537 | 6.8 it/s
+    epoch 001 | batch 3,000/4,475 | loss 0.00534 | 6.8 it/s
+    epoch 001 | batch 3,500/4,475 | loss 0.00528 | 6.8 it/s
+    epoch 001 | batch 4,000/4,475 | loss 0.00526 | 6.8 it/s
+  [1 steps] epoch 001 | train 0.005238 | val 0.002415 | minFDE 1056.1m (teacher@2 954.6m, init 1151.7m)  ✓ best
+    epoch 002 | batch 500/4,475 | loss 0.00480 | 6.7 it/s
+    epoch 002 | batch 1,000/4,475 | loss 0.00485 | 6.7 it/s
+    epoch 002 | batch 1,500/4,475 | loss 0.00492 | 6.7 it/s
+    epoch 002 | batch 2,000/4,475 | loss 0.00483 | 6.7 it/s
+    epoch 002 | batch 2,500/4,475 | loss 0.00485 | 6.7 it/s
+    epoch 002 | batch 3,000/4,475 | loss 0.00484 | 6.7 it/s
+    epoch 002 | batch 3,500/4,475 | loss 0.00484 | 6.7 it/s
+    epoch 002 | batch 4,000/4,475 | loss 0.00481 | 6.7 it/s
+  [1 steps] epoch 002 | train 0.004822 | val 0.002150 | minFDE 1044.9m (teacher@2 954.6m, init 1151.7m)  ✓ best
+    epoch 003 | batch 500/4,475 | loss 0.00462 | 6.7 it/s
+    epoch 003 | batch 1,000/4,475 | loss 0.00456 | 6.7 it/s
+    epoch 003 | batch 1,500/4,475 | loss 0.00449 | 6.7 it/s
+    epoch 003 | batch 2,000/4,475 | loss 0.00443 | 6.7 it/s
+    epoch 003 | batch 2,500/4,475 | loss 0.00444 | 6.7 it/s
+    epoch 003 | batch 3,000/4,475 | loss 0.00445 | 6.7 it/s
+    epoch 003 | batch 3,500/4,475 | loss 0.00446 | 6.7 it/s
+    epoch 003 | batch 4,000/4,475 | loss 0.00445 | 6.7 it/s
+  [1 steps] epoch 003 | train 0.004441 | val 0.002024 | minFDE 1040.4m (teacher@2 954.6m, init 1151.7m)  ✓ best
+    epoch 004 | batch 500/4,475 | loss 0.00400 | 6.7 it/s
+    epoch 004 | batch 1,000/4,475 | loss 0.00397 | 6.7 it/s
+    epoch 004 | batch 1,500/4,475 | loss 0.00399 | 6.7 it/s
+    epoch 004 | batch 2,000/4,475 | loss 0.00400 | 6.7 it/s
+    epoch 004 | batch 2,500/4,475 | loss 0.00399 | 6.7 it/s
+    epoch 004 | batch 3,000/4,475 | loss 0.00403 | 6.7 it/s
+    epoch 004 | batch 3,500/4,475 | loss 0.00399 | 6.7 it/s
+    epoch 004 | batch 4,000/4,475 | loss 0.00400 | 6.7 it/s
+  [1 steps] epoch 004 | train 0.003986 | val 0.001971 | minFDE 1033.1m (teacher@2 954.6m, init 1151.7m)  ✓ best
+    epoch 005 | batch 500/4,475 | loss 0.00370 | 6.6 it/s
+    epoch 005 | batch 1,000/4,475 | loss 0.00361 | 6.7 it/s
+    epoch 005 | batch 1,500/4,475 | loss 0.00364 | 6.7 it/s
+    epoch 005 | batch 2,000/4,475 | loss 0.00364 | 6.8 it/s
+    epoch 005 | batch 2,500/4,475 | loss 0.00366 | 6.7 it/s
+    epoch 005 | batch 3,000/4,475 | loss 0.00364 | 6.7 it/s
+    epoch 005 | batch 3,500/4,475 | loss 0.00362 | 6.7 it/s
+    epoch 005 | batch 4,000/4,475 | loss 0.00360 | 6.7 it/s
+  [1 steps] epoch 005 | train 0.003581 | val 0.001799 | minFDE 1031.0m (teacher@2 954.6m, init 1151.7m)  ✓ best
+    epoch 006 | batch 500/4,475 | loss 0.00312 | 6.7 it/s
+    epoch 006 | batch 1,000/4,475 | loss 0.00308 | 6.7 it/s
+    epoch 006 | batch 1,500/4,475 | loss 0.00314 | 6.7 it/s
+    epoch 006 | batch 2,000/4,475 | loss 0.00313 | 6.7 it/s
+    epoch 006 | batch 2,500/4,475 | loss 0.00314 | 6.7 it/s
+    epoch 006 | batch 3,000/4,475 | loss 0.00313 | 6.7 it/s
+    epoch 006 | batch 3,500/4,475 | loss 0.00313 | 6.7 it/s
+    epoch 006 | batch 4,000/4,475 | loss 0.00315 | 6.7 it/s
+  [1 steps] epoch 006 | train 0.003135 | val 0.001683 | minFDE 1034.1m (teacher@2 954.6m, init 1151.7m)
+    epoch 007 | batch 500/4,475 | loss 0.00278 | 6.6 it/s
+    epoch 007 | batch 1,000/4,475 | loss 0.00275 | 6.7 it/s
+    epoch 007 | batch 1,500/4,475 | loss 0.00273 | 6.7 it/s
+    epoch 007 | batch 2,000/4,475 | loss 0.00275 | 6.7 it/s
+    epoch 007 | batch 2,500/4,475 | loss 0.00277 | 6.7 it/s
+    epoch 007 | batch 3,000/4,475 | loss 0.00277 | 6.7 it/s
+    epoch 007 | batch 3,500/4,475 | loss 0.00277 | 6.7 it/s
+    epoch 007 | batch 4,000/4,475 | loss 0.00276 | 6.7 it/s
+  [1 steps] epoch 007 | train 0.002756 | val 0.001587 | minFDE 1023.5m (teacher@2 954.6m, init 1151.7m)  ✓ best
+    epoch 008 | batch 500/4,475 | loss 0.00241 | 6.7 it/s
+    epoch 008 | batch 1,000/4,475 | loss 0.00242 | 6.7 it/s
+    epoch 008 | batch 1,500/4,475 | loss 0.00244 | 6.7 it/s
+    epoch 008 | batch 2,000/4,475 | loss 0.00245 | 6.7 it/s
+    epoch 008 | batch 2,500/4,475 | loss 0.00246 | 6.7 it/s
+    epoch 008 | batch 3,000/4,475 | loss 0.00245 | 6.7 it/s
+    epoch 008 | batch 3,500/4,475 | loss 0.00245 | 6.7 it/s
+    epoch 008 | batch 4,000/4,475 | loss 0.00245 | 6.7 it/s
+  [1 steps] epoch 008 | train 0.002448 | val 0.001508 | minFDE 1025.4m (teacher@2 954.6m, init 1151.7m)
+    epoch 009 | batch 500/4,475 | loss 0.00232 | 6.6 it/s
+    epoch 009 | batch 1,000/4,475 | loss 0.00230 | 6.7 it/s
+    epoch 009 | batch 1,500/4,475 | loss 0.00229 | 6.7 it/s
+    epoch 009 | batch 2,000/4,475 | loss 0.00230 | 6.7 it/s
+    epoch 009 | batch 2,500/4,475 | loss 0.00230 | 6.7 it/s
+    epoch 009 | batch 3,000/4,475 | loss 0.00229 | 6.7 it/s
+    epoch 009 | batch 3,500/4,475 | loss 0.00230 | 6.7 it/s
+    epoch 009 | batch 4,000/4,475 | loss 0.00229 | 6.7 it/s
+  [1 steps] epoch 009 | train 0.002292 | val 0.001474 | minFDE 1022.0m (teacher@2 954.6m, init 1151.7m)  ✓ best
+    epoch 010 | batch 500/4,475 | loss 0.00225 | 6.7 it/s
+    epoch 010 | batch 1,000/4,475 | loss 0.00222 | 6.8 it/s
+    epoch 010 | batch 1,500/4,475 | loss 0.00222 | 6.8 it/s
+    epoch 010 | batch 2,000/4,475 | loss 0.00222 | 6.8 it/s
+    epoch 010 | batch 2,500/4,475 | loss 0.00222 | 6.8 it/s
+    epoch 010 | batch 3,000/4,475 | loss 0.00221 | 6.8 it/s
+    epoch 010 | batch 3,500/4,475 | loss 0.00221 | 6.8 it/s
+    epoch 010 | batch 4,000/4,475 | loss 0.00220 | 6.8 it/s
+  [1 steps] epoch 010 | train 0.002196 | val 0.001452 | minFDE 1020.2m (teacher@2 954.6m, init 1151.7m)  ✓ best
+Job finished at Fri Oct 16 13:37:02 PDT 2026 with exit code 0

@@ -1,0 +1,48 @@
+{
+  "settings": {
+    "ckpt": "best.pt",
+    "n_samples": 20,
+    "n_steps": 20,
+    "max_batches": null,
+    "nc_path": "/global/scratch/users/kevingeng/aviation-bayen/data/trajectories_adsblol_seq86_stage2.nc"
+  },
+  "n_windows": 76192,
+  "results_m": {
+    "6_2_128_SWiDiT": {
+      "minADE": 363.4028144461525,
+      "minFDE": 640.3857047614907,
+      "avgADE": 1256.587793214839,
+      "avgFDE": 2994.698138830192
+    },
+    "6_2_256_SWiDiT": {
+      "minADE": 319.94877850734,
+      "minFDE": 571.6977986636556,
+      "avgADE": 1125.6388818708,
+      "avgFDE": 2707.794736077935
+    },
+    "6_2_384_SWiDiT": {
+      "minADE": 305.6843689041747,
+      "minFDE": 551.527422908573,
+      "avgADE": 1054.6814862042602,
+      "avgFDE": 2542.4237903913795
+    },
+    "6_4_128_SWiDiT": {
+      "minADE": 304.6363514111554,
+      "minFDE": 549.0036651342168,
+      "avgADE": 1063.566457928654,
+      "avgFDE": 2566.683758219367
+    },
+    "6_4_256_SWiDiT": {
+      "minADE": 275.98534036033146,
+      "minFDE": 501.74449729999543,
+      "avgADE": 980.2097070558589,
+      "avgFDE": 2378.429545998924
+    },
+    "6_4_384_SWiDiT": {
+      "minADE": 269.3400956834379,
+      "minFDE": 493.07102333783405,
+      "avgADE": 946.4130804005014,
+      "avgFDE": 2298.9016577773914
+    }
+  }
+}
